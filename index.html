@@ -1,41 +1,29 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>牛の耳標番号検索</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <link rel="stylesheet" href="style.css">
-  <link rel="manifest" href="manifest.json">
-
-  <meta name="theme-color" content="#2563eb">
-  <link rel="apple-touch-icon" href="icon-192.png">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="耳標検索">
+<meta charset="UTF-8">
+<title>牛の耳標番号検索</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2563eb">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="耳標検索">
 </head>
 <body>
-
 <div class="container">
-  <div class="logo">
-    <img src="logo.gif" alt="ロゴ">
-  </div>
-
+  <div class="logo"><img src="logo.gif" alt="ロゴ"></div>
   <h1>🐄 牛の耳標番号検索</h1>
-
   <input id="earTag" placeholder="耳標番号">
   <button onclick="search()">検索</button>
-  <button class="scan" onclick="startScan()">📷 バーコード撮影</button>
-
   <div id="result"></div>
 </div>
-
-<script src="https://unpkg.com/@zxing/library@latest"></script>
 <script src="script.js"></script>
 <script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js");
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
 }
 </script>
-
 </body>
 </html>
