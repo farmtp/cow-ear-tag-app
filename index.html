@@ -1,29 +1,42 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
-<meta charset="UTF-8">
-<title>牛の耳標番号検索</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="style.css">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2563eb">
-<link rel="apple-touch-icon" href="icon-192.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="耳標検索">
+  <meta charset="UTF-8">
+  <title>耳標検索</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#7ea1a6">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-web-app-title" content="耳標番号検索">
+  <link rel="icon" href="favicon.png">
 </head>
+
 <body>
-<div class="container">
-  <div class="logo"><img src="logo.gif" alt="ロゴ"></div>
-  <h1>🐄 牛の耳標番号検索</h1>
-  <input id="earTag" placeholder="耳標番号">
-  <button onclick="search()">検索</button>
-  <div id="result"></div>
-</div>
-<script src="script.js"></script>
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
-}
-</script>
+  <div class="container">
+    <img src="logo.gif" alt="ロゴ">
+    <label for="earTag">耳標検索</label>
+    <input id="earTag" type="text" placeholder="1234567890">
+    <button onclick="search()">検索</button>
+    <div id="result"></div>
+
+    <input type="file" accept="image/*" capture="environment" onchange="scanImage(this)">
+
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
+
+    <script src="script.js"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+      }
+    </script>
+  </div>
+
+  <footer>
+    <small>(c) 2025 TP All Rights Reserved.</small>
+  </footer>
 </body>
+
 </html>
