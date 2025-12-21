@@ -17,15 +17,20 @@
 <body>
   <div class="container">
     <img src="logo.gif" alt="ロゴ">
+    <input
+      id="scan"
+      type="file"
+      accept="image/*"
+      capture="environment"
+      onchange="scanImage(this)">
     <label for="earTag">耳標検索</label>
     <input id="earTag" type="text" placeholder="1234567890">
     <button onclick="search()">検索</button>
-    <div id="result"></div>
 
-    <input type="file" accept="image/*" capture="environment" onchange="scanImage(this)">
+
 
     <script src="https://unpkg.com/@zxing/library@latest"></script>
-
+    <div id="result"></div>
     <script src="script.js"></script>
     <script>
       if ('serviceWorker' in navigator) {

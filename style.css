@@ -12,7 +12,7 @@ body {
 }
 
 .container {
-  max-width: 240px;
+  max-width: 260px;
   margin: 0 auto;
   flex:1;
 }
@@ -25,6 +25,16 @@ img{
   margin:32px auto;
 }
 
+#scan{
+  width:100%;
+  display:block;
+  padding:12px;
+  background:#89a67e;
+  color:black;
+  /* border-radius:8px; */
+  cursor:pointer;
+}
+
 label {
   width:120px;
   /* height: 120px; */
@@ -34,7 +44,7 @@ label {
   color: black;
 }
 
-input {
+#earTag {
   display:block;
   width: 100%;
   padding: 10px;
@@ -62,12 +72,6 @@ footer {
   /* margin: 32px auto 0; */
   color: black;
   margin-top: 32px;
-}
-
-@media(min-width:320px) {
-  body {
-    background: #a67e9d;
-  }
 }
 
 @media(min-width:640px) {
