@@ -69,6 +69,9 @@ function searchCattle() {
     errorArea.textContent = "";
     resultArea.style.display = 'none';
 
+    // クラスのリセット（注視のピンク色などが残らないように）
+    resultArea.classList.remove('alert-mode');
+
     if (!inputId) {
         errorArea.textContent = "番号を入力してください";
         return;
@@ -80,6 +83,11 @@ function searchCattle() {
     if (!cow) {
         errorArea.textContent = "該当する牛が見つかりませんでした。";
         return;
+    }
+
+    // ★追加機能: 「注視」が「○」の場合の処理
+    if (cow['注視'] && cow['注視'].trim() === '○') {
+        resultArea.classList.add('alert-mode'); // 全体をピンクにする
     }
 
     // 2. ヘッダー情報の表示
@@ -94,12 +102,12 @@ function searchCattle() {
     else if (statusText.match(/淘汰|死亡|事故/)) statusEl.classList.add('status-alert');
     else statusEl.classList.add('status-active');
 
-    // 3. 【全情報表示】牛情報の全カラムをループして表示
+    // 3. 全情報表示
     const grid = document.getElementById('allInfoGrid');
-    grid.innerHTML = ''; // クリア
+    grid.innerHTML = '';
 
-    // 表示したくない列があればここに記述
-    const excludeKeys = ['ステータス', '個体識別番号']; 
+    // 表示から除外するキー（「注視」はここで除外して表示しない）
+    const excludeKeys = ['ステータス', '個体識別番号', '注視']; 
 
     Object.keys(cow).forEach(key => {
         // 値が空でなく、除外リストになければ表示
@@ -111,26 +119,56 @@ function searchCattle() {
         }
     });
 
-    // 4. 体重データの抽出
-    const weights = weightData.filter(row => row['個体識別番号'] === inputId);
-    weights.sort((a, b) => new Date(a['体重測定日']) - new Date(b['体重測定日']));
+    // 4. 体重データの構築（マスタデータからの結合）
+    // まずはCSVの体重データ
+    let combinedWeights = weightData.filter(row => row['個体識別番号'] === inputId).map(w => {
+        return {
+            date: w['体重測定日'],
+            weight: parseFloat(w['体重']), // 数値化
+            note: w['報告'] || ''
+        };
+    });
 
-    // 5. テーブル更新（報告カラムを追加）
+    // ★追加機能: 「導入時」データの追加
+    if (cow['導入日'] && cow['導入時']) {
+        combinedWeights.push({
+            date: cow['導入日'],
+            weight: parseFloat(cow['導入時']),
+            note: '導入時'
+        });
+    }
+
+    // ★追加機能: 「出荷」かつ「出荷時体重」の追加
+    if (statusText.includes('出荷') && cow['屠畜日'] && cow['出荷時体重']) {
+        combinedWeights.push({
+            date: cow['屠畜日'],
+            weight: parseFloat(cow['出荷時体重']),
+            note: '出荷時'
+        });
+    }
+
+    // 日付順にソート (グラフ用)
+    combinedWeights.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // 重複除去（もし同じ日に複数のデータがあった場合、グラフが見づらくなるため）
+    // 簡易的にそのまま表示しますが、必要ならここでフィルタリング可能です
+
+    // 5. テーブル更新 (新しい順 = 逆順)
     const tbody = document.querySelector('#weightTable tbody');
     tbody.innerHTML = '';
     
-    [...weights].reverse().forEach(w => {
+    // テーブルには「導入時」「出荷時」も含めるか？
+    // 通常、履歴としてすべて見えたほうが便利なので含めます
+    [...combinedWeights].reverse().forEach(w => {
         const tr = document.createElement('tr');
-        // '報告'列が存在しない場合も考慮して表示
-        const note = w['報告'] ? w['報告'] : ''; 
-        tr.innerHTML = `<td>${w['体重測定日']}</td><td>${w['体重']} kg</td><td>${note}</td>`;
+        tr.innerHTML = `<td>${w.date}</td><td>${w.weight} kg</td><td>${w.note}</td>`;
         tbody.appendChild(tr);
     });
 
     resultArea.style.display = 'block';
 
     // 6. グラフ描画
-    drawChart(weights);
+    drawChart(combinedWeights);
 }
 
 // ==========================================
@@ -142,8 +180,8 @@ function drawChart(weights) {
 
     if (weights.length === 0) return;
 
-    const labels = weights.map(w => w['体重測定日']);
-    const dataPoints = weights.map(w => w['体重']);
+    const labels = weights.map(w => w.date);
+    const dataPoints = weights.map(w => w.weight);
 
     myChart = new Chart(ctx, {
         type: 'line',
@@ -156,6 +194,7 @@ function drawChart(weights) {
                 backgroundColor: 'rgba(52, 152, 219, 0.1)',
                 borderWidth: 2,
                 pointRadius: 5,
+                pointBackgroundColor: '#fff', // ポイントの中の色
                 tension: 0.1,
                 fill: true
             }]
@@ -165,6 +204,17 @@ function drawChart(weights) {
             maintainAspectRatio: false,
             scales: {
                 y: { beginAtZero: false, title: { display: true, text: 'kg' } }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        // ツールチップにメモ（導入時など）を表示する
+                        afterLabel: function(context) {
+                            const index = context.dataIndex;
+                            return weights[index].note ? `(${weights[index].note})` : '';
+                        }
+                    }
+                }
             }
         }
     });
@@ -178,12 +228,10 @@ function startScan() {
     const stopBtn = document.getElementById('stopScanBtn');
     const errorArea = document.getElementById('error');
     
-    // UI表示
     reader.style.display = 'block';
     stopBtn.style.display = 'block';
     errorArea.textContent = "";
 
-    // 以前のインスタンスが残っていたら停止させる安全策
     if (html5QrCode) {
         html5QrCode.stop().then(() => {
             html5QrCode.clear();
@@ -197,14 +245,9 @@ function startScan() {
     }
 
     function initCamera() {
-        // インスタンス作成
         html5QrCode = new Html5Qrcode("reader");
-
-        // Code 128のみ指定 (Experimental機能はオフにして安定性を優先)
         const config = { 
             fps: 10,
-            // qrboxを指定しないことで全画面スキャンとなり、認識率が上がることがあります
-            // 枠を表示したい場合は { width: 300, height: 150 } を設定してください
             qrbox: { width: 300, height: 150 },
             aspectRatio: 1.0
         };
@@ -213,7 +256,6 @@ function startScan() {
             { facingMode: "environment" }, 
             config,
             (decodedText) => {
-                // 成功時
                 const match = decodedText.match(/\d{10}/);
                 if (match) {
                     if (navigator.vibrate) navigator.vibrate(200);
@@ -222,7 +264,7 @@ function startScan() {
                     searchCattle();
                 }
             },
-            () => {} // 失敗時は無視
+            () => {} 
         ).catch(err => {
             console.error("Camera Error", err);
             errorArea.textContent = "カメラを起動できませんでした。";
@@ -237,7 +279,7 @@ function stopScan() {
             html5QrCode.clear();
             document.getElementById('reader').style.display = 'none';
             document.getElementById('stopScanBtn').style.display = 'none';
-            html5QrCode = null; // 参照を切る
+            html5QrCode = null;
         }).catch(err => {
             console.log("Stop Error", err);
         });
