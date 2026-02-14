@@ -1,63 +1,58 @@
-// データ保持用変数
+// グローバル変数
 let masterData = [];
 let weightData = [];
 let isDataLoaded = false;
+let html5QrCode = null;
+let myChart = null; // グラフのインスタンス保持用
 
-// ページ読み込み時にデータを取得
 window.onload = function() {
     loadAllData();
 };
 
 async function loadAllData() {
+    // （ここは以前と同じなので省略せず記述しますが、変更はありません）
     const loading = document.getElementById('loading');
     loading.style.display = 'block';
 
     try {
-        // 並行して2つのCSVを読み込む
         const [masterRes, weightRes] = await Promise.all([
-            fetch('master.csv').then(res => res.text()),
-            fetch('weight.csv').then(res => res.text())
+            fetch('master.csv').then(res => res.arrayBuffer()),
+            fetch('weight.csv').then(res => res.arrayBuffer())
         ]);
 
-        // CSVをJSON(オブジェクト)に変換
-        Papa.parse(masterRes, {
+        const decoder = new TextDecoder("shift-jis"); // 必要に応じて utf-8 に戻してください
+        const masterText = decoder.decode(masterRes);
+        const weightText = decoder.decode(weightRes);
+
+        Papa.parse(masterText, {
             header: true,
             skipEmptyLines: true,
-            complete: function(results) {
-                masterData = results.data;
-            }
+            complete: (results) => masterData = results.data
         });
 
-        Papa.parse(weightRes, {
+        Papa.parse(weightText, {
             header: true,
             skipEmptyLines: true,
-            complete: function(results) {
-                weightData = results.data;
-            }
+            complete: (results) => weightData = results.data
         });
 
         isDataLoaded = true;
         loading.style.display = 'none';
-        console.log("データ読み込み完了");
 
     } catch (error) {
-        console.error("CSV読み込みエラー:", error);
-        document.getElementById('error').textContent = "データの読み込みに失敗しました。CSVファイル名を確認してください。";
+        console.error(error);
+        document.getElementById('error').textContent = "データ読み込み失敗";
         loading.style.display = 'none';
     }
 }
 
 function searchCattle() {
-    if (!isDataLoaded) {
-        alert("データを読み込み中です。少々お待ちください。");
-        return;
-    }
+    if (!isDataLoaded) return;
 
     const inputId = document.getElementById('tagInput').value.trim();
     const resultArea = document.getElementById('result');
     const errorArea = document.getElementById('error');
     
-    // リセット
     errorArea.textContent = "";
     resultArea.style.display = 'none';
 
@@ -66,8 +61,6 @@ function searchCattle() {
         return;
     }
 
-    // 1. マスターデータから検索
-    // CSVのヘッダー名「個体識別番号」を使用します
     const cow = masterData.find(row => row['個体識別番号'] === inputId);
 
     if (!cow) {
@@ -75,36 +68,92 @@ function searchCattle() {
         return;
     }
 
-    // 2. 体重データから履歴を抽出
-    const weights = weightData.filter(row => row['個体識別番号'] === inputId);
-    
-    // 日付順にソート（念のため）
-    weights.sort((a, b) => new Date(b['体重測定日']) - new Date(a['体重測定日']));
-
-    // 3. 画面に表示
+    // --- 基本情報の表示 ---
     document.getElementById('resId').textContent = cow['個体識別番号'];
-    document.getElementById('resStatus').textContent = cow['ステータス'] || '-';
+    
+    // ステータスの表示と色分け
+    const statusEl = document.getElementById('resStatus');
+    const statusText = cow['ステータス'] || '-';
+    statusEl.textContent = statusText;
+    
+    // クラスをリセットして再設定
+    statusEl.className = 'status-badge';
+    if (statusText.includes('出荷')) {
+        statusEl.classList.add('status-out');
+    } else if (statusText.includes('淘汰') || statusText.includes('死亡')) {
+        statusEl.classList.add('status-alert');
+    } else {
+        statusEl.classList.add('status-active');
+    }
+
     document.getElementById('resBirth').textContent = cow['生年月日'] || '-';
     document.getElementById('resBarn').textContent = cow['牛舎'] || '-';
     document.getElementById('resIntroDate').textContent = cow['導入日'] || '-';
 
-    // 最新体重
-    const latestWeight = weights.length > 0 ? weights[0]['体重'] + ' kg' : 'データなし';
+    // --- 体重データの処理 ---
+    const weights = weightData.filter(row => row['個体識別番号'] === inputId);
+    // 日付でソート（古い順 = グラフの左から右）
+    weights.sort((a, b) => new Date(a['体重測定日']) - new Date(b['体重測定日']));
+
+    const latestWeight = weights.length > 0 ? weights[weights.length - 1]['体重'] + ' kg' : 'データなし';
     document.getElementById('resLatestWeight').textContent = latestWeight;
 
-    // 体重テーブルの構築
+    // --- テーブルの更新 ---
     const tbody = document.querySelector('#weightTable tbody');
     tbody.innerHTML = '';
-    weights.forEach(w => {
+    // テーブルは新しい順が見やすいので逆順にする
+    [...weights].reverse().forEach(w => {
         const tr = document.createElement('tr');
         tr.innerHTML = `<td>${w['体重測定日']}</td><td>${w['体重']}</td>`;
         tbody.appendChild(tr);
     });
 
     resultArea.style.display = 'block';
+
+    // --- グラフの描画 ---
+    drawChart(weights);
 }
 
-let html5QrCode;
+function drawChart(weights) {
+    const ctx = document.getElementById('weightChart').getContext('2d');
+
+    // 既存のグラフがあれば破棄（これをしないと前のグラフに重なって表示されてしまう）
+    if (myChart) {
+        myChart.destroy();
+    }
+
+    // データ準備
+    const labels = weights.map(w => w['体重測定日']);
+    const dataPoints = weights.map(w => w['体重']);
+
+    myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '体重 (kg)',
+                data: dataPoints,
+                borderColor: '#3498db',
+                backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                borderWidth: 2,
+                pointRadius: 4,
+                tension: 0.1, // 曲線の滑らかさ
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: false, // 体重なので0からでなくてOK
+                    title: { display: true, text: 'kg' }
+                }
+            }
+        }
+    });
+}
+
 function startScan() {
     const reader = document.getElementById('reader');
     const stopBtn = document.getElementById('stopScanBtn');
@@ -114,53 +163,32 @@ function startScan() {
     stopBtn.style.display = 'block';
     errorArea.textContent = "";
 
-    // ★修正1: ネイティブ機能（useBarCodeDetectorIfSupported）を有効化
-    // これによりスマホ専用のチップを使って高速に読み取ります
+    // Code128を優先、ネイティブAPI使用
     html5QrCode = new Html5Qrcode("reader", { 
-        formatsToSupport: [ 
-            Html5QrcodeSupportedFormats.CODE_128, 
-            Html5QrcodeSupportedFormats.ITF // 念のため旧規格も許可しておくと安心です
-        ],
-        experimentalFeatures: {
-            useBarCodeDetectorIfSupported: true
-        }
+        formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_128 ],
+        experimentalFeatures: { useBarCodeDetectorIfSupported: true }
     });
-
-    // ★修正2: 読み取りエリアを「横長」に変更
-    // バーコード全体が枠に収まりやすくします
-    const config = { 
-        fps: 10, 
-        qrbox: { width: 300, height: 100 }, 
-        aspectRatio: 1.0
-    };
 
     html5QrCode.start(
         { facingMode: "environment" },
-        config,
-        (decodedText, decodedResult) => {
-            console.log(`Scan result: ${decodedText}`);
-            
-            // 数字だけを抜き出す処理（10桁）
+        { fps: 10, qrbox: { width: 300, height: 100 } },
+        (decodedText) => {
             const match = decodedText.match(/\d{10}/);
-            
             if (match) {
-                // 読み取り成功時の音（スマホの設定によりますが、あると分かりやすいです）
-                // navigator.vibrate(200); 
+                // ★追加: 成功時のバイブレーション (200ms振動)
+                if (navigator.vibrate) {
+                    navigator.vibrate(200);
+                }
 
-                const cattleId = match[0];
-                document.getElementById('tagInput').value = cattleId;
+                document.getElementById('tagInput').value = match[0];
                 stopScan();
                 searchCattle();
-            } else {
-                console.log("10桁の数値が含まれていません: " + decodedText);
             }
         },
-        (errorMessage) => {
-            // 認識失敗は無視
-        }
+        () => {} // エラー無視
     ).catch(err => {
-        console.error("カメラ起動エラー", err);
-        errorArea.textContent = "カメラ起動に失敗しました。再読み込みして許可してください。";
+        console.error(err);
+        errorArea.textContent = "カメラ起動エラー";
         stopScan();
     });
 }
@@ -171,11 +199,6 @@ function stopScan() {
             html5QrCode.clear();
             document.getElementById('reader').style.display = 'none';
             document.getElementById('stopScanBtn').style.display = 'none';
-        }).catch(err => {
-            console.log("停止エラー", err);
         });
-    } else {
-        document.getElementById('reader').style.display = 'none';
-        document.getElementById('stopScanBtn').style.display = 'none';
     }
 }

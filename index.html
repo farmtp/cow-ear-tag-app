@@ -6,6 +6,7 @@
     <title>牛個体情報検索</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 <body>
@@ -13,29 +14,37 @@
     <div class="container">
         <h1>🐄 牛個体情報検索</h1>
         
-        <div id="reader" style="width: 100%; display:none;"></div>
-        <button id="stopScanBtn" onclick="stopScan()" style="display:none; background-color:#e74c3c; margin-bottom:15px; width:100%;">カメラスキャンを終了</button>
+        <div id="reader" style="display:none;"></div>
+        <button id="stopScanBtn" onclick="stopScan()" style="display:none;">カメラスキャンを終了</button>
 
         <div class="search-box">
             <input type="text" id="tagInput" placeholder="個体識別番号（10桁）" maxlength="10">
-            <button onclick="startScan()" style="background-color: #3498db;">📷</button>
-            <button onclick="searchCattle()">検索</button>
+            <button onclick="startScan()" class="icon-btn">📷</button>
+            <button onclick="searchCattle()" class="search-btn">検索</button>
         </div>
 
         <div id="loading" style="display:none;">データを読み込み中...</div>
         <div id="error" class="error"></div>
 
         <div id="result" class="result-card" style="display:none;">
-            <h2 id="resId"></h2>
+            <div class="header-info">
+                <h2 id="resId"></h2>
+                <span id="resStatus" class="status-badge">-</span>
+            </div>
+
             <div class="info-grid">
-                <div class="label">性別/種別</div><div class="value" id="resStatus"></div>
                 <div class="label">生年月日</div><div class="value" id="resBirth"></div>
                 <div class="label">牛舎</div><div class="value" id="resBarn"></div>
                 <div class="label">導入日</div><div class="value" id="resIntroDate"></div>
                 <div class="label">最新体重</div><div class="value" id="resLatestWeight"></div>
             </div>
             
-            <h3>体重履歴</h3>
+            <h3>体重推移グラフ</h3>
+            <div class="chart-container">
+                <canvas id="weightChart"></canvas>
+            </div>
+
+            <h3>履歴データ</h3>
             <table id="weightTable">
                 <thead>
                     <tr>
