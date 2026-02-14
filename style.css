@@ -1,13 +1,13 @@
 @charset "UTF-8";
 
 /* =========================================
-   基本設定 (Base Styles)
+   基本設定
    ========================================= */
 body {
     font-family: "Helvetica Neue", Arial, sans-serif;
     background-color: #f4f7f6;
     margin: 0;
-    padding: 10px; /* スマホ向けに余白は小さめ */
+    padding: 10px;
     color: #333;
     line-height: 1.6;
 }
@@ -30,92 +30,28 @@ h1 {
 }
 
 /* =========================================
-   検索ボックス周辺 (Search Box & Buttons)
+   検索ボックス周辺
    ========================================= */
-.search-box {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
-}
-
-input {
-    flex: 1; /* 横幅いっぱいに */
-    padding: 10px;
-    font-size: 16px; /* スマホでズームされないサイズ */
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    min-width: 0; /* Flexboxでのレイアウト崩れ防止 */
-}
-
-/* ボタン共通 */
-button {
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    color: white;
-    font-size: 16px;
-    padding: 0 15px;
-    height: 44px; /* 入力欄の高さに合わせる */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.2s;
-}
-
-/* カメラ起動ボタン */
-.icon-btn {
-    background-color: #3498db;
-    font-size: 20px;
-    min-width: 50px;
-}
-.icon-btn:hover { background-color: #2980b9; }
-
-/* 検索ボタン */
-.search-btn {
-    background-color: #27ae60;
-    font-weight: bold;
-    min-width: 70px;
-}
-.search-btn:hover { background-color: #219150; }
+.search-box { display: flex; gap: 8px; margin-bottom: 20px; }
+input { flex: 1; padding: 10px; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; min-width: 0; }
+button { border: none; border-radius: 4px; cursor: pointer; color: white; font-size: 16px; padding: 0 15px; height: 44px; display: flex; align-items: center; justify-content: center; }
+.icon-btn { background-color: #3498db; font-size: 20px; min-width: 50px; }
+.search-btn { background-color: #27ae60; font-weight: bold; min-width: 70px; }
 
 /* =========================================
-   カメラエリア (Camera Reader)
+   カメラエリア
    ========================================= */
-#reader {
-    margin-bottom: 15px;
-    border: 2px solid #ddd;
-    border-radius: 4px;
-    background: #000;
-    overflow: hidden;
-    /* ライブラリが生成する要素の高さを調整 */
-    min-height: 250px; 
-}
-
-#stopScanBtn {
-    background-color: #e74c3c;
-    width: 100%;
-    margin-bottom: 15px;
-}
-#stopScanBtn:hover { background-color: #c0392b; }
+#reader { margin-bottom: 15px; border: 2px solid #ddd; border-radius: 4px; background: #000; overflow: hidden; min-height: 250px; }
+#stopScanBtn { background-color: #e74c3c; width: 100%; margin-bottom: 15px; }
 
 /* =========================================
-   メッセージ表示 (Loading / Error)
+   メッセージ表示
    ========================================= */
-#loading {
-    text-align: center;
-    color: #666;
-    margin: 10px 0;
-}
-
-.error {
-    color: #e74c3c;
-    margin-bottom: 10px;
-    font-weight: bold;
-    text-align: center;
-}
+#loading { text-align: center; color: #666; margin: 10px 0; }
+.error { color: #e74c3c; margin-bottom: 10px; font-weight: bold; text-align: center; }
 
 /* =========================================
-   結果カード基本 (Result Card)
+   結果カード基本
    ========================================= */
 .result-card {
     background-color: white;
@@ -124,47 +60,46 @@ button {
     border-radius: 4px;
 }
 
-/* --- カード全体のステータス別カラー --- */
-
+/* カード全体のステータス別カラー */
 /* 死亡：グレー */
 .result-card.status-dead {
     background-color: #ecf0f1 !important;
-    border: 2px solid #7f8c8d !important;
-    padding: 15px; /* 全体が色付くのでpaddingを入れる */
-}
-.result-card.status-dead .header-info { border-bottom-color: #7f8c8d; }
-
-/* 淘汰：水色 */
-.result-card.status-cull {
-    background-color: #e0f7fa !important;
-    border: 2px solid #00bcd4 !important;
+    border: 2px solid #2c3e50 !important;
     padding: 15px;
 }
-.result-card.status-cull .header-info { border-bottom-color: #00bcd4; }
+.result-card.status-dead .header-info { border-bottom-color: #2c3e50; }
+
+/* 淘汰：水色 (背景) */
+.result-card.status-cull {
+    background-color: #e0f7fa !important;
+    border: 2px solid #00acc1 !important;
+    padding: 15px;
+}
+.result-card.status-cull .header-info { border-bottom-color: #00acc1; }
 
 /* 出荷：薄緑 */
 .result-card.status-ship {
     background-color: #dff0d8 !important;
-    border: 2px solid #3c763d !important;
+    border: 2px solid #27ae60 !important;
     padding: 15px;
 }
-.result-card.status-ship .header-info { border-bottom-color: #3c763d; }
+.result-card.status-ship .header-info { border-bottom-color: #27ae60; }
 
 /* 注視：ピンク (カード全体) */
 .result-card.status-alert {
     background-color: #f2dede !important;
-    border: 2px solid #a94442 !important;
+    border: 2px solid #e74c3c !important;
     padding: 15px;
 }
-.result-card.status-alert .header-info { border-bottom-color: #a94442; }
+.result-card.status-alert .header-info { border-bottom-color: #e74c3c; }
 
 /* =========================================
-   ヘッダー情報 (Header Info: ID & Badge)
+   ヘッダー情報
    ========================================= */
 .header-info {
     display: flex;
     align-items: center;
-    flex-wrap: wrap; /* 画面幅が狭いときに折り返す */
+    flex-wrap: wrap;
     gap: 10px;
     margin-bottom: 15px;
     border-bottom: 2px solid #eee;
@@ -179,9 +114,8 @@ button {
     line-height: 1.2;
 }
 
-/* ステータスバッジ */
+/* ステータスバッジ共通 */
 .status-badge {
-    background-color: #95a5a6; /* デフォルト: グレー */
     color: white;
     padding: 4px 12px;
     border-radius: 20px;
@@ -190,14 +124,28 @@ button {
     white-space: nowrap;
 }
 
-/* バッジの色分け */
-.status-badge.status-active { background-color: #2ecc71; } /* 在籍: 緑 */
-.status-badge.status-out    { background-color: #3498db; } /* 出荷: 青 */
-.status-badge.status-alert  { background-color: #e74c3c; } /* 事故/淘汰: 赤 */
+/* --- バッジの色定義 (ご要望に合わせて変更) --- */
+.badge-active { background-color: #2ecc71; } /* 在籍: 緑 */
 
+.badge-ship { background-color: #27ae60; }   /* 出荷: 緑 (濃いめ) */
+.badge-cull { background-color: #00acc1; }   /* 淘汰: 濃い水色 (Cyan darken) */
+.badge-dead { background-color: #000000; }   /* 死亡: 黒 */
+
+/* 注視バッジ (赤 + 点滅) */
+.badge-watch {
+    background-color: #e74c3c;
+    animation: blink 1.2s infinite ease-in-out;
+}
+
+/* 点滅アニメーション定義 */
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+}
 
 /* =========================================
-   情報詳細リスト (Info Grid)
+   情報詳細リスト
    ========================================= */
 .info-grid {
     display: flex;
@@ -208,25 +156,25 @@ button {
 
 .info-item {
     display: flex;
-    border-bottom: 1px dashed rgba(0,0,0,0.1); /* 色付き背景でも見えるように半透明黒 */
+    border-bottom: 1px dashed rgba(0,0,0,0.1);
     padding-bottom: 4px;
 }
 
 .info-label {
-    width: 120px;
+    width: 130px; /* オメガ開始日などが長いため少し広げました */
     font-weight: bold;
-    color: #555; /* 少し濃くして視認性アップ */
+    color: #555;
     flex-shrink: 0;
 }
 
 .info-value {
     flex-grow: 1;
-    word-break: break-all; /* 長い英数字などを折り返す */
-    white-space: pre-wrap; /* 改行コードを反映させる */
+    word-break: break-all;
+    white-space: pre-wrap;
 }
 
 /* =========================================
-   グラフ・テーブル (Chart & Table)
+   グラフ・テーブル
    ========================================= */
 h3 {
     margin-top: 30px;
@@ -242,7 +190,7 @@ h3 {
     height: 250px;
     width: 100%;
     margin-bottom: 20px;
-    background-color: rgba(255,255,255,0.5); /* 色付き背景でも見やすく */
+    background-color: rgba(255,255,255,0.5);
     border-radius: 4px;
 }
 
@@ -250,18 +198,10 @@ table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.9em;
-    background-color: rgba(255,255,255,0.7); /* テーブルも見やすく */
+    background-color: rgba(255,255,255,0.7);
     border-radius: 4px;
     overflow: hidden;
 }
 
-th, td {
-    padding: 10px 8px;
-    border-bottom: 1px solid #ddd;
-    text-align: left;
-}
-
-th {
-    background-color: rgba(0,0,0,0.05);
-    font-weight: bold;
-}
+th, td { padding: 10px 8px; border-bottom: 1px solid #ddd; text-align: left; }
+th { background-color: rgba(0,0,0,0.05); font-weight: bold; }

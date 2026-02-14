@@ -68,9 +68,7 @@ function searchCattle() {
     
     errorArea.textContent = "";
     resultArea.style.display = 'none';
-
-    // クラスのリセット
-    resultArea.className = 'result-card'; // 初期クラスのみに戻す
+    resultArea.className = 'result-card'; // クラスリセット
 
     if (!inputId) {
         errorArea.textContent = "番号を入力してください";
@@ -78,71 +76,131 @@ function searchCattle() {
     }
 
     // 1. マスタデータ検索
-    // 参照渡しではなくコピーを作成して、元のデータを汚さないようにする
     const originalCow = masterData.find(row => row['個体識別番号'] === inputId);
-
     if (!originalCow) {
         errorArea.textContent = "該当する牛が見つかりませんでした。";
         return;
     }
 
-    // 表示用にオブジェクトを浅いコピー
+    // 表示用にコピー
     const cow = { ...originalCow };
 
-    // ステータスと注視情報の取得
+    // --- ステータスと設定の判定 ---
     const statusText = (cow['ステータス'] || '').trim();
-    // 注視は「○」や「〇(漢数字ゼロ)」などの表記揺れに対応
-    const isWatch = (cow['注視'] && ['○', '〇'].includes(cow['注視'].trim()));
+    const isWatch = (cow['注視'] && ['○', '〇', '●'].includes(cow['注視'].trim())); // ●も念のため追加
+    
+    // 表示除外リスト（共通設定）
+    // 要望: 「購買日」「導入時」を非表示
+    // ※「ステータス」「個体識別番号」「注視」は基本情報として別扱いにするため除外
+    let excludeKeys = ['ステータス', '個体識別番号', '注視', '購買日', '導入時']; 
 
-    // 2. カード全体の色変更ロジック
-    // 優先順位: 死亡 > 淘汰 > 出荷 > 注視(ステータス空白)
+    // --- 日付計算用ヘルパー ---
+    const getDaysDiff = (startStr, endStr) => {
+        if (!startStr || !endStr) return null;
+        const s = new Date(startStr);
+        const e = new Date(endStr);
+        if (isNaN(s.getTime()) || isNaN(e.getTime())) return null;
+        const diff = e - s;
+        return Math.floor(diff / (1000 * 60 * 60 * 24));
+    };
+
+    // --- ステータス別ロジック ---
+    
+    // ヘッダー情報コンテナ取得
+    const headerInfo = document.querySelector('.header-info');
+    // 個体識別番号(ID)以外のバッジ要素を一度削除して再構築する
+    const resId = document.getElementById('resId');
+    headerInfo.innerHTML = ''; 
+    headerInfo.appendChild(resId);
+    resId.textContent = cow['個体識別番号'];
+
+    // バッジ生成関数
+    const addBadge = (text, cssClass) => {
+        const span = document.createElement('span');
+        span.className = `status-badge ${cssClass}`;
+        span.textContent = text;
+        headerInfo.appendChild(span);
+    };
+
+    // オメガ日数計算ロジック変数
+    let omegaEndDay = null;
+
     if (statusText === '死亡') {
+        // ■ 死亡
         resultArea.classList.add('status-dead');
+        addBadge('死亡', 'badge-dead'); // 黒
+
     } else if (statusText === '淘汰') {
+        // ■ 淘汰
         resultArea.classList.add('status-cull');
-    } else if (statusText === '出荷') {
-        resultArea.classList.add('status-ship');
+        addBadge('淘汰', 'badge-cull'); // 濃い水色
         
-        // ★出荷時のみの追加計算処理
-        // 「枝重」と「単価」があれば「金額」を計算してcowオブジェクトに追加
+        // 非表示: 牛舎
+        excludeKeys.push('牛舎');
+        
+        // オメガ日数計算用: 屠畜日
+        omegaEndDay = cow['屠畜日'];
+
+    } else if (statusText === '出荷') {
+        // ■ 出荷
+        resultArea.classList.add('status-ship');
+        addBadge('出荷', 'badge-ship'); // 緑
+        
+        // 非表示: 牛舎, 出荷時体重
+        excludeKeys.push('牛舎', '出荷時体重');
+
+        // 追加表示: 値段 (枝重 * 単価)
         if (cow['枝重'] && cow['単価']) {
-            const weight = parseFloat(cow['枝重'].replace(/,/g, ''));
-            const price = parseFloat(cow['単価'].replace(/,/g, ''));
-            if (!isNaN(weight) && !isNaN(price)) {
-                const amount = Math.floor(weight * price);
-                // 3桁区切りで表示
-                cow['金額'] = amount.toLocaleString(); 
+            const w = parseFloat(cow['枝重'].replace(/,/g, ''));
+            const p = parseFloat(cow['単価'].replace(/,/g, ''));
+            if (!isNaN(w) && !isNaN(p)) {
+                cow['値段'] = Math.floor(w * p).toLocaleString(); // 値段を追加
             }
         }
+        
+        // オメガ日数計算用: 屠畜日
+        omegaEndDay = cow['屠畜日'];
+
     } else if (statusText === '' && isWatch) {
-        // ステータスが空白で、かつ注視が○の場合のみピンク
+        // ■ 注視 (ステータス空白かつ注視○)
         resultArea.classList.add('status-alert');
+        addBadge('在籍', 'badge-active'); // 緑
+        addBadge('注視', 'badge-watch');  // 赤 + 点滅
+
+        // オメガ日数計算用: 今日の日付
+        omegaEndDay = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    } else {
+        // ■ 通常 (在籍)
+        addBadge(statusText || '在籍', 'badge-active');
+        
+        // 通常の在籍牛でもオメガ日数を出すならここに追加。今回は指定がないのでスキップ
+    }
+
+    // --- オメガ日数の計算と適用 ---
+    // 「オメガ開始日」があれば計算して書き換え
+    if (cow['オメガ開始日']) {
+        let diff = null;
+        if (omegaEndDay) {
+            diff = getDaysDiff(cow['オメガ開始日'], omegaEndDay);
+        } else {
+            // 指定がない場合（通常の在籍など）は今日時点を出すのが一般的ですが、
+            // 要望に明記されているのは「淘汰/出荷/注視」の場合のみなので、条件分岐
+             // 必要ならここで default: Today を設定
+        }
+
+        if (diff !== null) {
+            cow['オメガ開始日'] = `${cow['オメガ開始日']} (${diff}日)`;
+        }
     }
 
 
-    // 3. ヘッダー情報の表示
-    document.getElementById('resId').textContent = cow['個体識別番号'];
-    
-    // ステータスバッジの表示 (ここは元のロジック維持または微調整)
-    const statusEl = document.getElementById('resStatus');
-    statusEl.textContent = statusText || '在籍'; // 空白なら在籍と表示
-    
-    statusEl.className = 'status-badge';
-    if (statusText.includes('出荷')) statusEl.classList.add('status-out'); // 青
-    else if (statusText.match(/淘汰|死亡|事故/)) statusEl.classList.add('status-alert'); // 赤
-    else statusEl.classList.add('status-active'); // 緑
-
-    // 4. 全情報表示
+    // --- 4. 情報表示 (Grid生成) ---
     const grid = document.getElementById('allInfoGrid');
     grid.innerHTML = '';
 
-    // 表示から除外するキー
-    // 「注視」はここで確実に除外
-    const excludeKeys = ['ステータス', '個体識別番号', '注視']; 
-
-    // cowオブジェクトのキー順に表示
     Object.keys(cow).forEach(key => {
-        // キーが除外リストになく、かつ値が存在する場合のみ表示
+        // 除外リストになく、値が空でないものを表示
+        // ※「値段」などの計算項目もここでcowに入っていれば表示される
         if (!excludeKeys.includes(key) && cow[key] && cow[key].toString().trim() !== "") {
             const div = document.createElement('div');
             div.className = 'info-item';
@@ -151,7 +209,9 @@ function searchCattle() {
         }
     });
 
-    // 5. 体重データの構築
+
+    // --- 5. 体重データ・グラフ構築 ---
+    // ここは以前と同じロジック
     let combinedWeights = weightData.filter(row => row['個体識別番号'] === inputId).map(w => {
         return {
             date: w['体重測定日'],
@@ -160,7 +220,7 @@ function searchCattle() {
         };
     });
 
-    // 導入時データの追加
+    // 導入時 (グラフには含めるがリストからは消えていることに注意)
     if (cow['導入日'] && cow['導入時']) {
         combinedWeights.push({
             date: cow['導入日'],
@@ -169,7 +229,7 @@ function searchCattle() {
         });
     }
 
-    // 出荷時体重の追加 (出荷ステータスの場合)
+    // 出荷時体重 (出荷ステータスの場合)
     if (statusText.includes('出荷') && cow['屠畜日'] && cow['出荷時体重']) {
         combinedWeights.push({
             date: cow['屠畜日'],
@@ -178,13 +238,11 @@ function searchCattle() {
         });
     }
 
-    // 日付順にソート
     combinedWeights.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    // テーブル更新 (新しい順 = 逆順)
+    // テーブル表示 (逆順)
     const tbody = document.querySelector('#weightTable tbody');
     tbody.innerHTML = '';
-    
     [...combinedWeights].reverse().forEach(w => {
         const tr = document.createElement('tr');
         tr.innerHTML = `<td>${w.date}</td><td>${w.weight} kg</td><td>${w.note}</td>`;
@@ -193,7 +251,7 @@ function searchCattle() {
 
     resultArea.style.display = 'block';
 
-    // 6. グラフ描画
+    // グラフ描画
     drawChart(combinedWeights);
 }
 
