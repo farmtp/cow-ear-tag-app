@@ -69,8 +69,8 @@ function searchCattle() {
     errorArea.textContent = "";
     resultArea.style.display = 'none';
 
-    // クラスのリセット（注視のピンク色などが残らないように）
-    resultArea.classList.remove('alert-mode');
+    // クラスのリセット
+    resultArea.className = 'result-card'; // 初期クラスのみに戻す
 
     if (!inputId) {
         errorArea.textContent = "番号を入力してください";
@@ -78,40 +78,72 @@ function searchCattle() {
     }
 
     // 1. マスタデータ検索
-    const cow = masterData.find(row => row['個体識別番号'] === inputId);
+    // 参照渡しではなくコピーを作成して、元のデータを汚さないようにする
+    const originalCow = masterData.find(row => row['個体識別番号'] === inputId);
 
-    if (!cow) {
+    if (!originalCow) {
         errorArea.textContent = "該当する牛が見つかりませんでした。";
         return;
     }
 
-    // ★追加機能: 「注視」が「○」の場合の処理
-    if (cow['注視'] && cow['注視'].trim() === '○') {
-        resultArea.classList.add('alert-mode'); // 全体をピンクにする
+    // 表示用にオブジェクトを浅いコピー
+    const cow = { ...originalCow };
+
+    // ステータスと注視情報の取得
+    const statusText = (cow['ステータス'] || '').trim();
+    // 注視は「○」や「〇(漢数字ゼロ)」などの表記揺れに対応
+    const isWatch = (cow['注視'] && ['○', '〇'].includes(cow['注視'].trim()));
+
+    // 2. カード全体の色変更ロジック
+    // 優先順位: 死亡 > 淘汰 > 出荷 > 注視(ステータス空白)
+    if (statusText === '死亡') {
+        resultArea.classList.add('status-dead');
+    } else if (statusText === '淘汰') {
+        resultArea.classList.add('status-cull');
+    } else if (statusText === '出荷') {
+        resultArea.classList.add('status-ship');
+        
+        // ★出荷時のみの追加計算処理
+        // 「枝重」と「単価」があれば「金額」を計算してcowオブジェクトに追加
+        if (cow['枝重'] && cow['単価']) {
+            const weight = parseFloat(cow['枝重'].replace(/,/g, ''));
+            const price = parseFloat(cow['単価'].replace(/,/g, ''));
+            if (!isNaN(weight) && !isNaN(price)) {
+                const amount = Math.floor(weight * price);
+                // 3桁区切りで表示
+                cow['金額'] = amount.toLocaleString(); 
+            }
+        }
+    } else if (statusText === '' && isWatch) {
+        // ステータスが空白で、かつ注視が○の場合のみピンク
+        resultArea.classList.add('status-alert');
     }
 
-    // 2. ヘッダー情報の表示
+
+    // 3. ヘッダー情報の表示
     document.getElementById('resId').textContent = cow['個体識別番号'];
     
-    // ステータスの色分け
+    // ステータスバッジの表示 (ここは元のロジック維持または微調整)
     const statusEl = document.getElementById('resStatus');
-    const statusText = cow['ステータス'] || '在籍';
-    statusEl.textContent = statusText;
+    statusEl.textContent = statusText || '在籍'; // 空白なら在籍と表示
+    
     statusEl.className = 'status-badge';
-    if (statusText.includes('出荷')) statusEl.classList.add('status-out');
-    else if (statusText.match(/淘汰|死亡|事故/)) statusEl.classList.add('status-alert');
-    else statusEl.classList.add('status-active');
+    if (statusText.includes('出荷')) statusEl.classList.add('status-out'); // 青
+    else if (statusText.match(/淘汰|死亡|事故/)) statusEl.classList.add('status-alert'); // 赤
+    else statusEl.classList.add('status-active'); // 緑
 
-    // 3. 全情報表示
+    // 4. 全情報表示
     const grid = document.getElementById('allInfoGrid');
     grid.innerHTML = '';
 
-    // 表示から除外するキー（「注視」はここで除外して表示しない）
+    // 表示から除外するキー
+    // 「注視」はここで確実に除外
     const excludeKeys = ['ステータス', '個体識別番号', '注視']; 
 
+    // cowオブジェクトのキー順に表示
     Object.keys(cow).forEach(key => {
-        // 値が空でなく、除外リストになければ表示
-        if (!excludeKeys.includes(key) && cow[key] && cow[key].trim() !== "") {
+        // キーが除外リストになく、かつ値が存在する場合のみ表示
+        if (!excludeKeys.includes(key) && cow[key] && cow[key].toString().trim() !== "") {
             const div = document.createElement('div');
             div.className = 'info-item';
             div.innerHTML = `<div class="info-label">${key}</div><div class="info-value">${cow[key]}</div>`;
@@ -119,17 +151,16 @@ function searchCattle() {
         }
     });
 
-    // 4. 体重データの構築（マスタデータからの結合）
-    // まずはCSVの体重データ
+    // 5. 体重データの構築
     let combinedWeights = weightData.filter(row => row['個体識別番号'] === inputId).map(w => {
         return {
             date: w['体重測定日'],
-            weight: parseFloat(w['体重']), // 数値化
+            weight: parseFloat(w['体重']),
             note: w['報告'] || ''
         };
     });
 
-    // ★追加機能: 「導入時」データの追加
+    // 導入時データの追加
     if (cow['導入日'] && cow['導入時']) {
         combinedWeights.push({
             date: cow['導入日'],
@@ -138,7 +169,7 @@ function searchCattle() {
         });
     }
 
-    // ★追加機能: 「出荷」かつ「出荷時体重」の追加
+    // 出荷時体重の追加 (出荷ステータスの場合)
     if (statusText.includes('出荷') && cow['屠畜日'] && cow['出荷時体重']) {
         combinedWeights.push({
             date: cow['屠畜日'],
@@ -147,18 +178,13 @@ function searchCattle() {
         });
     }
 
-    // 日付順にソート (グラフ用)
+    // 日付順にソート
     combinedWeights.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    // 重複除去（もし同じ日に複数のデータがあった場合、グラフが見づらくなるため）
-    // 簡易的にそのまま表示しますが、必要ならここでフィルタリング可能です
-
-    // 5. テーブル更新 (新しい順 = 逆順)
+    // テーブル更新 (新しい順 = 逆順)
     const tbody = document.querySelector('#weightTable tbody');
     tbody.innerHTML = '';
     
-    // テーブルには「導入時」「出荷時」も含めるか？
-    // 通常、履歴としてすべて見えたほうが便利なので含めます
     [...combinedWeights].reverse().forEach(w => {
         const tr = document.createElement('tr');
         tr.innerHTML = `<td>${w.date}</td><td>${w.weight} kg</td><td>${w.note}</td>`;
@@ -194,7 +220,7 @@ function drawChart(weights) {
                 backgroundColor: 'rgba(52, 152, 219, 0.1)',
                 borderWidth: 2,
                 pointRadius: 5,
-                pointBackgroundColor: '#fff', // ポイントの中の色
+                pointBackgroundColor: '#fff',
                 tension: 0.1,
                 fill: true
             }]
@@ -208,7 +234,6 @@ function drawChart(weights) {
             plugins: {
                 tooltip: {
                     callbacks: {
-                        // ツールチップにメモ（導入時など）を表示する
                         afterLabel: function(context) {
                             const index = context.dataIndex;
                             return weights[index].note ? `(${weights[index].note})` : '';
