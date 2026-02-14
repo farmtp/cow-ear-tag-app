@@ -59,3 +59,10 @@ th, td {
 }
 th { background-color: #f8f9fa; }
 .error { color: red; margin-bottom: 10px; }
+
+#reader {
+    margin-bottom: 20px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    background: #000;
+}

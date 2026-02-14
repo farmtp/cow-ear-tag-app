@@ -6,14 +6,19 @@
     <title>牛個体情報検索</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 <body>
 
     <div class="container">
         <h1>🐄 牛個体情報検索</h1>
         
+        <div id="reader" style="width: 100%; display:none;"></div>
+        <button id="stopScanBtn" onclick="stopScan()" style="display:none; background-color:#e74c3c; margin-bottom:15px; width:100%;">カメラスキャンを終了</button>
+
         <div class="search-box">
-            <input type="text" id="tagInput" placeholder="個体識別番号（10桁）を入力" maxlength="10">
+            <input type="text" id="tagInput" placeholder="個体識別番号（10桁）" maxlength="10">
+            <button onclick="startScan()" style="background-color: #3498db;">📷</button>
             <button onclick="searchCattle()">検索</button>
         </div>
 
