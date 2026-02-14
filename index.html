@@ -3,80 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>牛個体情報照会</title>
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-    <style>
-        body { font-family: "Helvetica Neue", Arial, sans-serif; padding: 10px; background-color: #f4f4f9; color: #333; }
-        h1 { text-align: center; font-size: 1.5rem; color: #2c3e50; }
-        
-        /* 入力エリア */
-        .input-group { display: flex; justify-content: center; gap: 5px; margin-bottom: 20px; }
-        input { padding: 12px; font-size: 16px; border: 1px solid #ddd; border-radius: 5px; width: 60%; }
-        button.btn-search { padding: 12px 20px; background-color: #3498db; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
-        
-        /* カメラスキャンボタン */
-        .btn-scan { display: block; width: 100%; max-width: 400px; margin: 0 auto 20px; padding: 15px; background-color: #27ae60; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
-        #reader { width: 100%; max-width: 500px; margin: 0 auto; display: none; background: #000; }
-
-        /* 結果カード */
-        .result-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: 0 auto; display: none; }
-        .result-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 10px; }
-        .cow-id { font-size: 1.8rem; font-weight: bold; color: #2c3e50; }
-        .status-badge { padding: 5px 10px; border-radius: 15px; font-size: 0.9rem; font-weight: bold; color: white; background-color: #95a5a6; }
-        
-        .info-row { display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px dashed #eee; padding-bottom: 4px; }
-        .info-label { color: #7f8c8d; font-size: 0.9rem; }
-        .info-val { font-weight: bold; font-size: 1.1rem; }
-        
-        .weight-section { margin-top: 20px; background-color: #eafaf1; padding: 10px; border-radius: 8px; }
-        .weight-history { font-size: 0.85rem; color: #555; margin-top: 5px; }
-    </style>
+    <title>牛個体情報検索</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 </head>
 <body>
 
-    <h1>🐄 牛個体情報照会</h1>
-
-    <button class="btn-scan" onclick="startScanner()">📷 バーコード読取</button>
-    <div id="reader"></div>
-
-    <div class="input-group">
-        <input type="number" id="manualInput" placeholder="個体識別番号 (10桁)">
-        <button class="btn-search" onclick="searchCow()">検索</button>
-    </div>
-
-    <div id="result" class="result-card">
-        <div class="result-header">
-            <span class="cow-id" id="res-id"></span>
-            <span class="status-badge" id="res-status"></span>
+    <div class="container">
+        <h1>🐄 牛個体情報検索</h1>
+        
+        <div class="search-box">
+            <input type="text" id="tagInput" placeholder="個体識別番号（10桁）を入力" maxlength="10">
+            <button onclick="searchCattle()">検索</button>
         </div>
 
-        <div class="info-row">
-            <span class="info-label">牛舎</span>
-            <span class="info-val" id="res-barn"></span>
-        </div>
-        <div class="info-row">
-            <span class="info-label">生年月日</span>
-            <span class="info-val" id="res-birth"></span>
-        </div>
-        <div class="info-row">
-            <span class="info-label">導入日</span>
-            <span class="info-val" id="res-intro"></span>
-        </div>
-        <div class="info-row">
-            <span class="info-label">市場 / 価格</span>
-            <span class="info-val"><span id="res-market"></span> / <span id="res-price"></span></span>
-        </div>
+        <div id="loading" style="display:none;">データを読み込み中...</div>
+        <div id="error" class="error"></div>
 
-        <div class="weight-section">
-            <div class="info-row" style="border:none;">
-                <span class="info-label">最新体重</span>
-                <span class="info-val" style="color:#27ae60; font-size:1.4rem;"><span id="res-weight"></span> kg</span>
+        <div id="result" class="result-card" style="display:none;">
+            <h2 id="resId"></h2>
+            <div class="info-grid">
+                <div class="label">性別/種別</div><div class="value" id="resStatus"></div>
+                <div class="label">生年月日</div><div class="value" id="resBirth"></div>
+                <div class="label">牛舎</div><div class="value" id="resBarn"></div>
+                <div class="label">導入日</div><div class="value" id="resIntroDate"></div>
+                <div class="label">最新体重</div><div class="value" id="resLatestWeight"></div>
             </div>
-            <div class="weight-history">
-                測定日: <span id="res-weight-date"></span><br>
-                <span id="res-weight-history"></span>
-            </div>
+            
+            <h3>体重履歴</h3>
+            <table id="weightTable">
+                <thead>
+                    <tr>
+                        <th>測定日</th>
+                        <th>体重 (kg)</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
         </div>
     </div>
 

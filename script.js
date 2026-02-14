@@ -1,119 +1,105 @@
+// データ保持用変数
 let masterData = [];
 let weightData = [];
+let isDataLoaded = false;
 
-// ページ読み込み時にExcelデータを取得
-window.onload = async function() {
-    try {
-        // ファイル名は作成したExcelファイル名に合わせてください
-        const response = await fetch('./cattle_data.xlsx');
-        if (!response.ok) throw new Error("Excelファイルが見つかりません");
-        
-        const arrayBuffer = await response.arrayBuffer();
-        
-        // 日付を文字列として読み込む設定 (raw: false)
-        const workbook = XLSX.read(arrayBuffer, { type: 'array', cellDates: true });
-        
-        // 1. 牛マスタシートの読み込み
-        if (workbook.Sheets["牛マスタ"]) {
-            masterData = XLSX.utils.sheet_to_json(workbook.Sheets["牛マスタ"], { defval: "" });
-            console.log("牛マスタ読込:", masterData.length + "件");
-        } else {
-            alert("「牛マスタ」シートが見つかりません");
-        }
-
-        // 2. 体重データシートの読み込み
-        if (workbook.Sheets["体重データ"]) {
-            weightData = XLSX.utils.sheet_to_json(workbook.Sheets["体重データ"], { defval: "" });
-            console.log("体重データ読込:", weightData.length + "件");
-        }
-        
-    } catch (error) {
-        console.error(error);
-        alert("データの読み込みに失敗しました。\nGitHubにファイルがアップされているか確認してください。");
-    }
+// ページ読み込み時にデータを取得
+window.onload = function() {
+    loadAllData();
 };
 
-function searchCow(scannedId = null) {
-    const inputId = scannedId || document.getElementById('manualInput').value;
-    if (!inputId) return;
+async function loadAllData() {
+    const loading = document.getElementById('loading');
+    loading.style.display = 'block';
 
-    // --- マスタ検索 ---
-    // 文字列化して比較 (Excelの数値扱い対策)
-    const cow = masterData.find(d => String(d['個体識別番号']) === String(inputId));
+    try {
+        // 並行して2つのCSVを読み込む
+        const [masterRes, weightRes] = await Promise.all([
+            fetch('master.csv').then(res => res.text()),
+            fetch('weight.csv').then(res => res.text())
+        ]);
 
-    const resDiv = document.getElementById('result');
+        // CSVをJSON(オブジェクト)に変換
+        Papa.parse(masterRes, {
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                masterData = results.data;
+            }
+        });
+
+        Papa.parse(weightRes, {
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                weightData = results.data;
+            }
+        });
+
+        isDataLoaded = true;
+        loading.style.display = 'none';
+        console.log("データ読み込み完了");
+
+    } catch (error) {
+        console.error("CSV読み込みエラー:", error);
+        document.getElementById('error').textContent = "データの読み込みに失敗しました。CSVファイル名を確認してください。";
+        loading.style.display = 'none';
+    }
+}
+
+function searchCattle() {
+    if (!isDataLoaded) {
+        alert("データを読み込み中です。少々お待ちください。");
+        return;
+    }
+
+    const inputId = document.getElementById('tagInput').value.trim();
+    const resultArea = document.getElementById('result');
+    const errorArea = document.getElementById('error');
     
-    if (cow) {
-        // 基本情報の表示
-        document.getElementById('res-id').innerText = cow['個体識別番号'];
-        
-        // ステータスに応じた色変更
-        const status = cow['ステータス'] || '在籍';
-        const statusBadge = document.getElementById('res-status');
-        statusBadge.innerText = status;
-        statusBadge.style.backgroundColor = (status.includes('出荷') || status.includes('淘汰')) ? '#95a5a6' : '#e67e22'; // 出荷済はグレー、在籍はオレンジ
+    // リセット
+    errorArea.textContent = "";
+    resultArea.style.display = 'none';
 
-        document.getElementById('res-barn').innerText = cow['牛舎'] || '-';
-        document.getElementById('res-birth').innerText = formatDate(cow['生年月日']);
-        document.getElementById('res-intro').innerText = formatDate(cow['導入日']);
-        document.getElementById('res-market').innerText = cow['市場'] || '-';
-        document.getElementById('res-price').innerText = cow['落札金額'] ? Number(cow['落札金額']).toLocaleString() + '円' : '-';
-
-        // --- 体重情報の取得 ---
-        // その牛の体重データを全検索して抽出
-        const myWeights = weightData.filter(d => String(d['個体識別番号']) === String(inputId));
-        
-        if (myWeights.length > 0) {
-            // 日付でソート（新しい順）
-            myWeights.sort((a, b) => new Date(b['体重測定日']) - new Date(a['体重測定日']));
-            
-            const latest = myWeights[0];
-            document.getElementById('res-weight').innerText = latest['体重'];
-            document.getElementById('res-weight-date').innerText = formatDate(latest['体重測定日']);
-            
-            // 履歴の表示（直近3回分など）
-            /* もし履歴一覧を出したい場合はここで myWeights をループしてHTMLを作れます
-            */
-        } else {
-            document.getElementById('res-weight').innerText = '-';
-            document.getElementById('res-weight-date').innerText = '-';
-        }
-
-        resDiv.style.display = 'block';
-    } else {
-        alert("該当する牛が見つかりませんでした。\n番号: " + inputId);
-        resDiv.style.display = 'none';
+    if (!inputId) {
+        errorArea.textContent = "番号を入力してください";
+        return;
     }
-}
 
-// Excelの日付シリアル値やDate型を「YYYY-MM-DD」形式に変換する関数
-function formatDate(dateVal) {
-    if (!dateVal) return '-';
-    // 既に文字列ならそのまま返す
-    if (typeof dateVal === 'string') return dateVal; 
-    // Date型ならフォーマット
-    if (dateVal instanceof Date) {
-        return dateVal.toISOString().split('T')[0];
-    }
-    return dateVal;
-}
+    // 1. マスターデータから検索
+    // CSVのヘッダー名「個体識別番号」を使用します
+    const cow = masterData.find(row => row['個体識別番号'] === inputId);
 
-// --- カメラ機能 (前回と同じ) ---
-let html5QrcodeScanner;
-function startScanner() {
-    document.getElementById('reader').style.display = 'block';
-    if (!html5QrcodeScanner) {
-        html5QrcodeScanner = new Html5Qrcode("reader");
+    if (!cow) {
+        errorArea.textContent = "該当する牛が見つかりませんでした。";
+        return;
     }
-    html5QrcodeScanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 150 } },
-        (decodedText) => {
-            html5QrcodeScanner.stop();
-            document.getElementById('reader').style.display = 'none';
-            document.getElementById('manualInput').value = decodedText;
-            searchCow(decodedText);
-        },
-        () => {}
-    ).catch(err => alert("カメラ起動エラー: " + err));
+
+    // 2. 体重データから履歴を抽出
+    const weights = weightData.filter(row => row['個体識別番号'] === inputId);
+    
+    // 日付順にソート（念のため）
+    weights.sort((a, b) => new Date(b['体重測定日']) - new Date(a['体重測定日']));
+
+    // 3. 画面に表示
+    document.getElementById('resId').textContent = cow['個体識別番号'];
+    document.getElementById('resStatus').textContent = cow['ステータス'] || '-';
+    document.getElementById('resBirth').textContent = cow['生年月日'] || '-';
+    document.getElementById('resBarn').textContent = cow['牛舎'] || '-';
+    document.getElementById('resIntroDate').textContent = cow['導入日'] || '-';
+
+    // 最新体重
+    const latestWeight = weights.length > 0 ? weights[0]['体重'] + ' kg' : 'データなし';
+    document.getElementById('resLatestWeight').textContent = latestWeight;
+
+    // 体重テーブルの構築
+    const tbody = document.querySelector('#weightTable tbody');
+    tbody.innerHTML = '';
+    weights.forEach(w => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${w['体重測定日']}</td><td>${w['体重']}</td>`;
+        tbody.appendChild(tr);
+    });
+
+    resultArea.style.display = 'block';
 }
