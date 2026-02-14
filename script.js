@@ -114,15 +114,23 @@ function startScan() {
     stopBtn.style.display = 'block';
     errorArea.textContent = "";
 
-    // ★修正点1: Code 128 (GS1-128) のみを読み取る設定に変更
-    // これにより誤検知が減り、読み取り速度が上がります
+    // ★修正1: ネイティブ機能（useBarCodeDetectorIfSupported）を有効化
+    // これによりスマホ専用のチップを使って高速に読み取ります
     html5QrCode = new Html5Qrcode("reader", { 
-        formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_128 ] 
+        formatsToSupport: [ 
+            Html5QrcodeSupportedFormats.CODE_128, 
+            Html5QrcodeSupportedFormats.ITF // 念のため旧規格も許可しておくと安心です
+        ],
+        experimentalFeatures: {
+            useBarCodeDetectorIfSupported: true
+        }
     });
 
+    // ★修正2: 読み取りエリアを「横長」に変更
+    // バーコード全体が枠に収まりやすくします
     const config = { 
         fps: 10, 
-        qrbox: { width: 250, height: 150 },
+        qrbox: { width: 300, height: 100 }, 
         aspectRatio: 1.0
     };
 
@@ -130,30 +138,29 @@ function startScan() {
         { facingMode: "environment" },
         config,
         (decodedText, decodedResult) => {
-            console.log(`Raw scan result: ${decodedText}`);
+            console.log(`Scan result: ${decodedText}`);
             
-            // ★修正点2: データ整形処理
-            // GS1-128の場合、識別子などが含まれる可能性があるため、
-            // 読み取った文字列から「10桁の数字」を抽出して入力します
+            // 数字だけを抜き出す処理（10桁）
             const match = decodedText.match(/\d{10}/);
             
             if (match) {
-                // 10桁の数字が見つかった場合
+                // 読み取り成功時の音（スマホの設定によりますが、あると分かりやすいです）
+                // navigator.vibrate(200); 
+
                 const cattleId = match[0];
                 document.getElementById('tagInput').value = cattleId;
                 stopScan();
                 searchCattle();
             } else {
-                // 読み取れたが10桁の数字が含まれていない場合（エラーにはせずログのみ）
-                console.log("10桁の番号が見つかりませんでした: " + decodedText);
+                console.log("10桁の数値が含まれていません: " + decodedText);
             }
         },
         (errorMessage) => {
-            // 認識中...
+            // 認識失敗は無視
         }
     ).catch(err => {
         console.error("カメラ起動エラー", err);
-        errorArea.textContent = "カメラを起動できませんでした。";
+        errorArea.textContent = "カメラ起動に失敗しました。再読み込みして許可してください。";
         stopScan();
     });
 }
