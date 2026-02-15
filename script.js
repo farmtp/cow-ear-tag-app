@@ -219,3 +219,120 @@ function searchCattle() {
 }
 
 // --- グラフ描画・カメラ制御関数は変更なしのため省略（元のコードをそのまま維持してください） ---
+
+// ==========================================
+// グラフ描画
+// ==========================================
+function drawChart(weights) {
+    const ctx = document.getElementById('weightChart').getContext('2d');
+    if (myChart) myChart.destroy();
+
+    if (weights.length === 0) return;
+
+    const labels = weights.map(w => w.date);
+    const dataPoints = weights.map(w => w.weight);
+
+    myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '体重 (kg)',
+                data: dataPoints,
+                borderColor: '#3498db',
+                backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                borderWidth: 2,
+                pointRadius: 5,
+                pointBackgroundColor: '#fff',
+                tension: 0.1,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: false, title: { display: true, text: 'kg' } }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function(context) {
+                            const index = context.dataIndex;
+                            return weights[index].note ? `(${weights[index].note})` : '';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// ==========================================
+// カメラ制御 (安定版)
+// ==========================================
+function startScan() {
+    const reader = document.getElementById('reader');
+    const stopBtn = document.getElementById('stopScanBtn');
+    const errorArea = document.getElementById('error');
+    
+    reader.style.display = 'block';
+    stopBtn.style.display = 'block';
+    errorArea.textContent = "";
+
+    if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+            html5QrCode.clear();
+        }).catch(err => {
+            console.log("Cleanup error:", err);
+        }).finally(() => {
+            initCamera();
+        });
+    } else {
+        initCamera();
+    }
+
+    function initCamera() {
+        html5QrCode = new Html5Qrcode("reader");
+        const config = { 
+            fps: 10,
+            qrbox: { width: 300, height: 150 },
+            aspectRatio: 1.0
+        };
+
+        html5QrCode.start(
+            { facingMode: "environment" }, 
+            config,
+            (decodedText) => {
+                const match = decodedText.match(/\d{10}/);
+                if (match) {
+                    if (navigator.vibrate) navigator.vibrate(200);
+                    document.getElementById('tagInput').value = match[0];
+                    stopScan();
+                    searchCattle();
+                }
+            },
+            () => {} 
+        ).catch(err => {
+            console.error("Camera Error", err);
+            errorArea.textContent = "カメラを起動できませんでした。";
+            stopScan();
+        });
+    }
+}
+
+function stopScan() {
+    if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+            html5QrCode.clear();
+            document.getElementById('reader').style.display = 'none';
+            document.getElementById('stopScanBtn').style.display = 'none';
+            html5QrCode = null;
+        }).catch(err => {
+            console.log("Stop Error", err);
+        });
+    } else {
+        document.getElementById('reader').style.display = 'none';
+        document.getElementById('stopScanBtn').style.display = 'none';
+    }
+}
