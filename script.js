@@ -247,6 +247,10 @@ function searchCattle() {
         addBadge('出荷', 'badge-ship');
         excludeKeys.push('牛舎');
         ageBaseDate = cow['屠畜日'];
+        if (cow['オメガ開始日'] && cow['屠畜日']) {
+            const diff = getDaysDiff(cow['オメガ開始日'], cow['屠畜日']);
+            cow['オメガ開始日'] = `${cow['オメガ開始日']} (${diff}日)`;
+        }
 
         if (cow['枝重'] && cow['単価']) {
             const w = parseFloat(cow['枝重'].replace(/,/g, ''));
