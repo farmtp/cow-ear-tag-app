@@ -4,231 +4,299 @@
    基本設定
    ========================================= */
 body {
-    font-family: "Helvetica Neue", Arial, sans-serif;
-    background-color: #f4f7f6;
-    margin: 0;
-    padding: 10px;
-    color: #333;
-    line-height: 1.6;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  /* background-color: #f4f7f6; */
+  margin: 0;
+  padding: 8px;
+  color: #333;
+  line-height: 1.6;
+  text-align: center;
 }
 
 .container {
-    max-width: 600px;
-    margin: 0 auto;
-    background: white;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  max-width: 600px;
+  margin: 0 auto;
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 h1 {
-    text-align: center;
-    color: #2c3e50;
-    font-size: 1.5em;
-    margin-top: 0;
-    margin-bottom: 20px;
+  text-align: center;
+  color: #2c3e50;
+  font-size: 1.5em;
+  margin-top: 0;
+  margin-bottom: 20px;
 }
 
 /* 画像アイコン(ヘッダー) */
 .header-icon {
-    width: 1.5em;
-    vertical-align: text-bottom;
-    margin-right: 0.3em;
+  width: 1.5em;
+  vertical-align: text-bottom;
+  margin-right: 0.3em;
+}
+
+.btn-icon {
+  width: 1.4em;
+  /* ボタン内のアイコンサイズ */
+  height: auto;
+  vertical-align: middle;
+}
+
+/* 検索ボタンとカメラボタンのスタイル調整 */
+.search-box button {
+  padding: 0.5rem;
+  /* 画像が入るのでパディングを少し調整 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* =========================================
    検索ボックス周辺
    ========================================= */
 .search-box {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
 }
 
 input {
-    flex: 1;
-    padding: 10px;
-    font-size: 16px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    min-width: 0;
+  flex: 1;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  min-width: 0;
 }
 
 /* ボタン共通設定 */
 .search-box button {
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    color: white;
-    font-size: 16px;
-    height: 44px;
-    padding: 0 15px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: white;
+  font-size: 16px;
+  height: 44px;
+  padding: 0 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 /* ボタン内のアイコン画像 */
 .btn-icon {
-    height: 24px;
-    width: auto;
-    display: block;
+  height: 24px;
+  width: auto;
+  display: block;
 }
 
 /* 色設定 */
 /* --- 変更点: 両方のボタンをグレー(#7f8c8d)に統一 --- */
-.icon-btn, .search-btn { 
-    background-color: #7f8c8d; 
+.icon-btn,
+.search-btn {
+  background-color: #7f8c8d;
 }
 
 /* =========================================
    カメラエリア
    ========================================= */
-#qr-reader, #reader {
-    margin-bottom: 15px;
-    border: 2px solid #ddd;
-    border-radius: 4px;
-    background: #000;
-    overflow: hidden;
-    min-height: 250px;
+#qr-reader,
+#reader {
+  margin-bottom: 15px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  background: #000;
+  overflow: hidden;
+  min-height: 250px;
 }
 
 #stopScanBtn {
-    background-color: #e74c3c;
-    width: 100%;
-    margin-bottom: 15px;
-    color: white;
-    border: none;
-    padding: 10px;
-    font-size: 16px;
-    border-radius: 4px;
-    cursor: pointer;
+  background-color: #e74c3c;
+  width: 100%;
+  margin-bottom: 15px;
+  color: white;
+  border: none;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
 /* =========================================
    メッセージ表示
    ========================================= */
-#loading { text-align: center; color: #666; margin: 10px 0; }
-.error-message { color: #e74c3c; margin-bottom: 10px; font-weight: bold; text-align: center; }
+#loading {
+  text-align: center;
+  color: #666;
+  margin: 10px 0;
+}
+
+.error-message {
+  color: #e74c3c;
+  margin-bottom: 10px;
+  font-weight: bold;
+  text-align: center;
+}
 
 /* =========================================
    結果カード
    ========================================= */
 .result-card {
-    background-color: white;
-    border-top: 2px solid #eee;
-    padding-top: 15px;
-    border-radius: 4px;
+  background-color: white;
+  border-top: 2px solid #eee;
+  padding-top: 15px;
+  border-radius: 4px;
 }
 
 /* ステータス別スタイル */
 .result-card.status-dead {
-    background-color: #ecf0f1 !important;
-    border: 2px solid #2c3e50 !important;
-    padding: 15px;
+  background-color: #ecf0f1 !important;
+  border: 2px solid #2c3e50 !important;
+  padding: 15px;
 }
+
 .result-card.status-cull {
-    background-color: #e0f7fa !important;
-    border: 2px solid #00acc1 !important;
-    padding: 15px;
+  background-color: #e0f7fa !important;
+  border: 2px solid #00acc1 !important;
+  padding: 15px;
 }
+
 .result-card.status-ship {
-    background-color: #dff0d8 !important;
-    border: 2px solid #27ae60 !important;
-    padding: 15px;
+  background-color: #dff0d8 !important;
+  border: 2px solid #27ae60 !important;
+  padding: 15px;
 }
+
 .result-card.status-alert {
-    background-color: #f2dede !important;
-    border: 2px solid #e74c3c !important;
-    padding: 15px;
+  background-color: #f2dede !important;
+  border: 2px solid #e74c3c !important;
+  padding: 15px;
 }
 
 /* ヘッダー情報 */
 .header-info {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 15px;
-    border-bottom: 2px solid #eee;
-    padding-bottom: 10px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
 }
 
 #resId {
-    margin: 0;
-    font-size: 1.8em;
-    font-weight: bold;
-    color: #2c3e50;
+  margin: 0;
+  font-size: 1.8em;
+  font-weight: bold;
+  color: #2c3e50;
 }
 
 /* バッジ */
 .status-badge {
-    color: white;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.9em;
-    font-weight: bold;
-    white-space: nowrap;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.9em;
+  font-weight: bold;
+  white-space: nowrap;
 }
-.badge-active { background-color: #2ecc71; }
-.badge-ship { background-color: #27ae60; }
-.badge-cull { background-color: #00acc1; }
-.badge-dead { background-color: #000000; }
+
+.badge-active {
+  background-color: #2ecc71;
+}
+
+.badge-ship {
+  background-color: #27ae60;
+}
+
+.badge-cull {
+  background-color: #00acc1;
+}
+
+.badge-dead {
+  background-color: #000000;
+}
+
 .badge-watch {
-    background-color: #e74c3c;
-    animation: blink 1.2s infinite ease-in-out;
+  background-color: #e74c3c;
+  animation: blink 1.2s infinite ease-in-out;
 }
 
 @keyframes blink {
-    0% { opacity: 1; }
-    50% { opacity: 0.4; }
-    100% { opacity: 1; }
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+
+  100% {
+    opacity: 1;
+  }
 }
 
 /* 詳細リスト */
 .info-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 25px;
 }
+
 .info-item {
-    display: flex;
-    border-bottom: 1px dashed rgba(0,0,0,0.1);
-    padding-bottom: 4px;
+  display: flex;
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.1);
+  padding-bottom: 4px;
 }
+
 .info-label {
-    width: 140px;
-    font-weight: bold;
-    color: #555;
-    flex-shrink: 0;
+  width: 140px;
+  font-weight: bold;
+  color: #555;
+  flex-shrink: 0;
 }
+
 .info-value {
-    flex-grow: 1;
-    word-break: break-all;
-    white-space: pre-wrap;
+  flex-grow: 1;
+  word-break: break-all;
+  white-space: pre-wrap;
 }
 
 /* グラフ・テーブル */
 h3 {
-    margin-top: 30px;
-    margin-bottom: 10px;
-    color: #34495e;
-    font-size: 1.1em;
-    border-left: 4px solid #3498db;
-    padding-left: 10px;
+  margin-top: 30px;
+  margin-bottom: 10px;
+  color: #34495e;
+  font-size: 1.1em;
+  border-left: 4px solid #3498db;
+  padding-left: 10px;
 }
+
 .chart-container {
-    position: relative;
-    height: 250px;
-    width: 100%;
-    margin-bottom: 20px;
+  position: relative;
+  height: 250px;
+  width: 100%;
+  margin-bottom: 20px;
 }
+
 table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9em;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
 }
-th, td { padding: 10px 8px; border-bottom: 1px solid #ddd; text-align: left; }
-th { background-color: #f9f9f9; font-weight: bold; }
+
+th,
+td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+th {
+  background-color: #f9f9f9;
+  font-weight: bold;
+}
