@@ -37,7 +37,7 @@ h1 {
 }
 
 /* =========================================
-   検索ボックス周辺 (ボタン揃え修正)
+   検索ボックス周辺
    ========================================= */
 .search-box {
     display: flex;
@@ -54,16 +54,16 @@ input {
     min-width: 0;
 }
 
-/* ボタン共通設定: 高さ合わせとFlex配置 */
+/* ボタン共通設定 */
 .search-box button {
     border: none;
     border-radius: 4px;
     cursor: pointer;
     color: white;
     font-size: 16px;
-    height: 44px; /* 高さ固定 */
+    height: 44px;
     padding: 0 15px;
-    display: inline-flex; /* 画像と縦位置を合わせるため */
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
@@ -77,7 +77,8 @@ input {
 }
 
 /* 色設定 */
-.icon-btn { background-color: #3498db; }
+/* --- 変更点: カメラボタン(.icon-btn)を検索ボタンと同じ緑色に変更 --- */
+.icon-btn { background-color: #27ae60; } 
 .search-btn { background-color: #27ae60; }
 
 /* =========================================
@@ -92,7 +93,6 @@ input {
     min-height: 250px;
 }
 
-/* 停止ボタン（HTML内にあれば） */
 #stopScanBtn {
     background-color: #e74c3c;
     width: 100%;
@@ -137,7 +137,6 @@ input {
     border: 2px solid #27ae60 !important;
     padding: 15px;
 }
-/* 注視（背景ピンク） */
 .result-card.status-alert {
     background-color: #f2dede !important;
     border: 2px solid #e74c3c !important;
