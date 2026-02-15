@@ -57,7 +57,7 @@ async function loadAllData() {
 }
 
 // ==========================================
-// 検索実行処理（主要な変更箇所）
+// 検索実行処理
 // ==========================================
 function searchCattle() {
     if (!isDataLoaded) { alert("データ読み込み中です。"); return; }
@@ -108,7 +108,7 @@ function searchCattle() {
     headerInfo.innerHTML = ''; 
     headerInfo.appendChild(resId);
 
-    // IDをハイフン形式に (1234567890 -> 12345-67890)
+    // IDをハイフン形式に (5桁-5桁)
     const rawId = cow['個体識別番号'] || "";
     resId.textContent = rawId.length === 10 ? `${rawId.slice(0, 5)}-${rawId.slice(5)}` : rawId;
 
@@ -120,22 +120,29 @@ function searchCattle() {
     };
 
     // --- ステータス別ロジック ---
-    let ageBaseDate = null; // 年齢計算の基準日
+    let ageBaseDate = null; 
 
     if (statusText === '死亡') {
         resultArea.classList.add('status-dead');
         addBadge('死亡', 'badge-dead');
-        excludeKeys.push('牛舎');
+        excludeKeys.push('牛舎'); // 死亡時は牛舎非表示
         ageBaseDate = cow['屠畜日'];
-        // オメガ日数計算
+        // オメガ日数計算: (屠畜日) - (オメガ開始日)
         if (cow['オメガ開始日'] && cow['屠畜日']) {
             const diff = getDaysDiff(cow['オメガ開始日'], cow['屠畜日']);
             cow['オメガ開始日'] = `${cow['オメガ開始日']} (${diff}日)`;
         }
+
     } else if (statusText === '淘汰') {
         resultArea.classList.add('status-cull');
         addBadge('淘汰', 'badge-cull');
         ageBaseDate = cow['屠畜日'];
+        // 淘汰時もオメガ日数を表示
+        if (cow['オメガ開始日'] && cow['屠畜日']) {
+            const diff = getDaysDiff(cow['オメガ開始日'], cow['屠畜日']);
+            cow['オメガ開始日'] = `${cow['オメガ開始日']} (${diff}日)`;
+        }
+
     } else if (statusText === '出荷') {
         resultArea.classList.add('status-ship');
         addBadge('出荷', 'badge-ship');
@@ -145,15 +152,16 @@ function searchCattle() {
             const p = parseFloat(cow['単価'].replace(/,/g, ''));
             if (!isNaN(w) && !isNaN(p)) cow['値段'] = Math.floor(w * p).toLocaleString();
         }
+
     } else if (statusText === '') {
         addBadge(isWatch ? '注視' : '在籍', isWatch ? 'badge-watch' : 'badge-active');
-        ageBaseDate = todayStr; // 空白時は今日を基準
+        ageBaseDate = todayStr; // 空白時は今日の日付 - 生年月日
     } else {
         addBadge(statusText, 'badge-active');
         ageBaseDate = todayStr;
     }
 
-    // 年齢表示の追加
+    // 生年月日の横に年齢を表示: (基準日) - (生年月日)
     if (cow['生年月日'] && ageBaseDate) {
         const age = getAge(cow['生年月日'], ageBaseDate);
         if (age) cow['生年月日'] = `${cow['生年月日']} (${age}才)`;
@@ -171,11 +179,11 @@ function searchCattle() {
         }
     });
 
-    // --- 体重データ処理（古い順に表示） ---
+    // --- 体重データ処理 ---
     let combinedWeights = weightData.filter(row => row['個体識別番号'] === inputId).map(w => {
         return { date: w['体重測定日'], weight: parseFloat(w['体重']), note: w['報告'] || '' };
     });
-    if (cow['導入日'] && originalCow['導入時']) { // originalCowから数値を取得
+    if (cow['導入日'] && originalCow['導入時']) {
         combinedWeights.push({ date: cow['導入日'].split(' ')[0], weight: parseFloat(originalCow['導入時']), note: '導入時' });
     }
     if (statusText === '出荷' && cow['屠畜日'] && originalCow['出荷時体重']) {
@@ -185,7 +193,7 @@ function searchCattle() {
     // 日付の昇順（古い順）にソート
     combinedWeights.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    // テーブル表示（ソートされた順＝古い順）
+    // テーブル表示（古い順）
     const tbody = document.querySelector('#weightTable tbody');
     tbody.innerHTML = '';
     combinedWeights.forEach(w => {
