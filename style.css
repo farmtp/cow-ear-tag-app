@@ -77,9 +77,10 @@ input {
 }
 
 /* 色設定 */
-/* --- 変更点: カメラボタン(.icon-btn)を検索ボタンと同じ緑色に変更 --- */
-.icon-btn { background-color: #27ae60; } 
-.search-btn { background-color: #27ae60; }
+/* --- 変更点: 両方のボタンをグレー(#7f8c8d)に統一 --- */
+.icon-btn, .search-btn { 
+    background-color: #7f8c8d; 
+}
 
 /* =========================================
    カメラエリア

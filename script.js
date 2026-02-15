@@ -98,7 +98,11 @@ function initAndStart(elementId) {
         (decodedText) => {
             const match = decodedText.match(/\d{10}/);
             if (match) {
-                if (navigator.vibrate) navigator.vibrate(200);
+                // --- バイブレーション実行 (200ms) ---
+                if (navigator.vibrate) {
+                    navigator.vibrate(200);
+                }
+                
                 document.getElementById('tagInput').value = match[0];
                 stopCamera();
                 searchCattle();
@@ -319,7 +323,8 @@ function drawChart(data) {
             scales: {
                 y: {
                     beginAtZero: false,
-                    suggestedMin: 400 // --- 変更点: 最小値を400kgに設定 ---
+                    // --- 変更点: 最小値を600kgに設定 ---
+                    suggestedMin: 600 
                 }
             }
         }
