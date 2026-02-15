@@ -57,6 +57,35 @@ async function loadAllData() {
 }
 
 // ==========================================
+// ビープ音再生 (Web Audio API)
+// ==========================================
+function playBeep() {
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.type = 'sine';       // 音色: 正弦波
+        osc.frequency.value = 1500; // 周波数: 1500Hz (高めのピッ音)
+        gain.gain.value = 0.1;   // 音量: 小さめ
+
+        osc.start();
+        setTimeout(() => {
+            osc.stop();
+            ctx.close();
+        }, 100); // 0.1秒間再生
+    } catch (e) {
+        console.error("Audio play failed", e);
+    }
+}
+
+// ==========================================
 // カメラ起動処理
 // ==========================================
 function startCamera() {
@@ -98,7 +127,8 @@ function initAndStart(elementId) {
         (decodedText) => {
             const match = decodedText.match(/\d{10}/);
             if (match) {
-                // --- バイブレーション実行 (200ms) ---
+                // --- 音とバイブレーション ---
+                playBeep(); 
                 if (navigator.vibrate) {
                     navigator.vibrate(200);
                 }
@@ -322,9 +352,8 @@ function drawChart(data) {
             maintainAspectRatio: false,
             scales: {
                 y: {
-                    beginAtZero: false,
-                    // --- 変更点: 最小値を600kgに設定 ---
-                    suggestedMin: 600 
+                    // --- 変更点: データ範囲に合わせて自動調整 (suggestedMinを削除) ---
+                    beginAtZero: false 
                 }
             }
         }
