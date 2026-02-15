@@ -51,7 +51,7 @@ async function loadAllData() {
 
   } catch (error) {
     console.error(error);
-    if (errorArea) errorArea.textContent = "データの読み込みに失敗しました。";
+    if (errorArea) errorArea.textContent = "データの読み込みに失敗しました";
     loading.style.display = 'none';
   }
 }
@@ -165,7 +165,7 @@ function stopCamera() {
 // 検索実行処理
 // ==========================================
 function searchCattle() {
-  if (!isDataLoaded) { alert("データ読み込み中です。"); return; }
+  if (!isDataLoaded) { alert("データ読み込み中です"); return; }
 
   const inputId = document.getElementById('tagInput').value.trim();
   const resultArea = document.getElementById('result');
@@ -182,7 +182,7 @@ function searchCattle() {
 
   const originalCow = masterData.find(row => row['個体識別番号'] === inputId);
   if (!originalCow) {
-    errorArea.textContent = "該当する牛が見つかりませんでした。";
+    errorArea.textContent = "該当する牛が見つかりませんでした";
     return;
   }
 
