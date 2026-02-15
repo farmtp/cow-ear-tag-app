@@ -29,29 +29,90 @@ h1 {
     margin-bottom: 20px;
 }
 
+/* 画像アイコン(ヘッダー) */
+.header-icon {
+    width: 1.5em;
+    vertical-align: text-bottom;
+    margin-right: 0.3em;
+}
+
 /* =========================================
-   検索ボックス周辺
+   検索ボックス周辺 (ボタン揃え修正)
    ========================================= */
-.search-box { display: flex; gap: 8px; margin-bottom: 20px; }
-input { flex: 1; padding: 10px; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; min-width: 0; }
-button { border: none; border-radius: 4px; cursor: pointer; color: white; font-size: 16px; padding: 0 15px; height: 44px; display: flex; align-items: center; justify-content: center; }
-.icon-btn { background-color: #3498db; font-size: 20px; min-width: 50px; }
-.search-btn { background-color: #27ae60; font-weight: bold; min-width: 70px; }
+.search-box {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+input {
+    flex: 1;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    min-width: 0;
+}
+
+/* ボタン共通設定: 高さ合わせとFlex配置 */
+.search-box button {
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: white;
+    font-size: 16px;
+    height: 44px; /* 高さ固定 */
+    padding: 0 15px;
+    display: inline-flex; /* 画像と縦位置を合わせるため */
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+/* ボタン内のアイコン画像 */
+.btn-icon {
+    height: 24px;
+    width: auto;
+    display: block;
+}
+
+/* 色設定 */
+.icon-btn { background-color: #3498db; }
+.search-btn { background-color: #27ae60; }
 
 /* =========================================
    カメラエリア
    ========================================= */
-#reader { margin-bottom: 15px; border: 2px solid #ddd; border-radius: 4px; background: #000; overflow: hidden; min-height: 250px; }
-#stopScanBtn { background-color: #e74c3c; width: 100%; margin-bottom: 15px; }
+#qr-reader, #reader {
+    margin-bottom: 15px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    background: #000;
+    overflow: hidden;
+    min-height: 250px;
+}
+
+/* 停止ボタン（HTML内にあれば） */
+#stopScanBtn {
+    background-color: #e74c3c;
+    width: 100%;
+    margin-bottom: 15px;
+    color: white;
+    border: none;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
 
 /* =========================================
    メッセージ表示
    ========================================= */
 #loading { text-align: center; color: #666; margin: 10px 0; }
-.error { color: #e74c3c; margin-bottom: 10px; font-weight: bold; text-align: center; }
+.error-message { color: #e74c3c; margin-bottom: 10px; font-weight: bold; text-align: center; }
 
 /* =========================================
-   結果カード基本
+   結果カード
    ========================================= */
 .result-card {
     background-color: white;
@@ -60,42 +121,30 @@ button { border: none; border-radius: 4px; cursor: pointer; color: white; font-s
     border-radius: 4px;
 }
 
-/* カード全体のステータス別カラー */
-/* 死亡：グレー */
+/* ステータス別スタイル */
 .result-card.status-dead {
     background-color: #ecf0f1 !important;
     border: 2px solid #2c3e50 !important;
     padding: 15px;
 }
-.result-card.status-dead .header-info { border-bottom-color: #2c3e50; }
-
-/* 淘汰：水色 (背景) */
 .result-card.status-cull {
     background-color: #e0f7fa !important;
     border: 2px solid #00acc1 !important;
     padding: 15px;
 }
-.result-card.status-cull .header-info { border-bottom-color: #00acc1; }
-
-/* 出荷：薄緑 */
 .result-card.status-ship {
     background-color: #dff0d8 !important;
     border: 2px solid #27ae60 !important;
     padding: 15px;
 }
-.result-card.status-ship .header-info { border-bottom-color: #27ae60; }
-
-/* 注視：ピンク (カード全体) */
+/* 注視（背景ピンク） */
 .result-card.status-alert {
     background-color: #f2dede !important;
     border: 2px solid #e74c3c !important;
     padding: 15px;
 }
-.result-card.status-alert .header-info { border-bottom-color: #e74c3c; }
 
-/* =========================================
-   ヘッダー情報
-   ========================================= */
+/* ヘッダー情報 */
 .header-info {
     display: flex;
     align-items: center;
@@ -111,10 +160,9 @@ button { border: none; border-radius: 4px; cursor: pointer; color: white; font-s
     font-size: 1.8em;
     font-weight: bold;
     color: #2c3e50;
-    line-height: 1.2;
 }
 
-/* ステータスバッジ共通 */
+/* バッジ */
 .status-badge {
     color: white;
     padding: 4px 12px;
@@ -123,59 +171,46 @@ button { border: none; border-radius: 4px; cursor: pointer; color: white; font-s
     font-weight: bold;
     white-space: nowrap;
 }
-
-/* --- バッジの色定義 (ご要望に合わせて変更) --- */
-.badge-active { background-color: #2ecc71; } /* 在籍: 緑 */
-
-.badge-ship { background-color: #27ae60; }   /* 出荷: 緑 (濃いめ) */
-.badge-cull { background-color: #00acc1; }   /* 淘汰: 濃い水色 (Cyan darken) */
-.badge-dead { background-color: #000000; }   /* 死亡: 黒 */
-
-/* 注視バッジ (赤 + 点滅) */
+.badge-active { background-color: #2ecc71; }
+.badge-ship { background-color: #27ae60; }
+.badge-cull { background-color: #00acc1; }
+.badge-dead { background-color: #000000; }
 .badge-watch {
     background-color: #e74c3c;
     animation: blink 1.2s infinite ease-in-out;
 }
 
-/* 点滅アニメーション定義 */
 @keyframes blink {
     0% { opacity: 1; }
     50% { opacity: 0.4; }
     100% { opacity: 1; }
 }
 
-/* =========================================
-   情報詳細リスト
-   ========================================= */
+/* 詳細リスト */
 .info-grid {
     display: flex;
     flex-direction: column;
     gap: 8px;
     margin-bottom: 25px;
 }
-
 .info-item {
     display: flex;
     border-bottom: 1px dashed rgba(0,0,0,0.1);
     padding-bottom: 4px;
 }
-
 .info-label {
-    width: 130px; /* オメガ開始日などが長いため少し広げました */
+    width: 140px;
     font-weight: bold;
     color: #555;
     flex-shrink: 0;
 }
-
 .info-value {
     flex-grow: 1;
     word-break: break-all;
     white-space: pre-wrap;
 }
 
-/* =========================================
-   グラフ・テーブル
-   ========================================= */
+/* グラフ・テーブル */
 h3 {
     margin-top: 30px;
     margin-bottom: 10px;
@@ -184,24 +219,16 @@ h3 {
     border-left: 4px solid #3498db;
     padding-left: 10px;
 }
-
 .chart-container {
     position: relative;
     height: 250px;
     width: 100%;
     margin-bottom: 20px;
-    background-color: rgba(255,255,255,0.5);
-    border-radius: 4px;
 }
-
 table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.9em;
-    background-color: rgba(255,255,255,0.7);
-    border-radius: 4px;
-    overflow: hidden;
 }
-
 th, td { padding: 10px 8px; border-bottom: 1px solid #ddd; text-align: left; }
-th { background-color: rgba(0,0,0,0.05); font-weight: bold; }
+th { background-color: #f9f9f9; font-weight: bold; }
