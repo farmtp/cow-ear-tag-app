@@ -102,14 +102,8 @@ input {
   height: 24px;
   width: auto;
   display: block;
-}
-
-/* 色設定 */
-/* --- 変更点: 両方のボタンをグレー(#7f8c8d)に統一 --- */
-/* .icon-btn,
-.search-btn {
   background-color: #7f8c8d;
-} */
+}
 
 /* =========================================
    カメラエリア
