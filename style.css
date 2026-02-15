@@ -4,12 +4,12 @@
    基本設定
    ========================================= */
 body {
-  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
   background-color: #f4f7f6;
   margin: 0;
   padding: 8px;
   color: #333;
-  /* line-height: 1.6; */
+  line-height: 1.6;
 }
 
 .container {
