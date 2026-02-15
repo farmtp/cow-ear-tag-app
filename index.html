@@ -3,53 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>牛個体情報検索</title>
+    <title>牛個体情報検索アプリ</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        /* 画像アイコン用の追加スタイル */
+        .header-icon {
+            width: 1.5em;
+            vertical-align: text-bottom;
+            margin-right: 0.3em;
+        }
+        .btn-icon {
+            width: 1.4em; /* ボタン内のアイコンサイズ */
+            height: auto;
+            vertical-align: middle;
+        }
+        /* 検索ボタンとカメラボタンのスタイル調整 */
+        .search-box button {
+            padding: 0.5rem; /* 画像が入るのでパディングを少し調整 */
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
 </head>
 <body>
-
     <div class="container">
-        <h1>🐄 牛個体情報検索</h1>
-        
-        <div id="reader" style="display:none;"></div>
-        <button id="stopScanBtn" onclick="stopScan()" style="display:none;">カメラスキャンを終了</button>
+        <header>
+            <h1><img src="cow.png" alt="牛" class="header-icon"> 牛個体情報検索</h1>
+        </header>
 
         <div class="search-box">
-            <input type="text" id="tagInput" placeholder="個体識別番号（10桁）" maxlength="10">
-            <button onclick="startScan()" class="icon-btn">📷</button>
-            <button onclick="searchCattle()" class="search-btn">検索</button>
+            <input type="text" id="tagInput" placeholder="個体識別番号を入力 (例: 1234567890)">
+            
+            <button class="icon-btn" onclick="startCamera()" title="カメラ起動">
+                <img src="camera.png" alt="カメラ" class="btn-icon">
+            </button>
+            
+            <button onclick="searchCattle()" title="検索">
+                <img src="search.png" alt="検索" class="btn-icon">
+            </button>
         </div>
 
-        <div id="loading" style="display:none;">データを読み込み中...</div>
-        <div id="error" class="error"></div>
+        <div id="loading">データを読み込み中...</div>
 
-        <div id="result" class="result-card" style="display:none;">
+        <div id="error" class="error-message"></div>
+
+        <div id="qr-reader" style="display: none;"></div>
+
+        <div id="result" class="result-card" style="display: none;">
             <div class="header-info">
                 <h2 id="resId"></h2>
-                <span id="resStatus" class="status-badge">-</span>
-            </div>
-
-            <div id="allInfoGrid" class="info-grid">
                 </div>
-            
+
+            <div class="info-grid" id="allInfoGrid">
+                </div>
+
             <h3>体重推移グラフ</h3>
             <div class="chart-container">
                 <canvas id="weightChart"></canvas>
             </div>
 
-            <h3>履歴データ</h3>
-            <table id="weightTable">
+            <h3>体重履歴</h3>
+            <table class="weight-table" id="weightTable">
                 <thead>
                     <tr>
-                        <th width="30%">測定日</th>
-                        <th width="20%">体重</th>
-                        <th>報告/メモ</th>
+                        <th>日付</th>
+                        <th>体重</th>
+                        <th>メモ</th>
                     </tr>
                 </thead>
-                <tbody></tbody>
+                <tbody>
+                    </tbody>
             </table>
         </div>
     </div>
