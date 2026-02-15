@@ -16,38 +16,49 @@ body {
 .container {
   max-width: 600px;
   margin: 0 auto;
+  margin-bottom: 16px;
   background: white;
   padding: 16px;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 h1 {
   text-align: center;
   color: #2c3e50;
-  font-size: 1.5em;
-  margin-top: 0;
+  font-size: 24px;
+  margin-top: 0 auto;
   margin-bottom: 20px;
 }
 
 /* 画像アイコン(ヘッダー) */
-.header-icon {
-  width: 1.5em;
+/* .header-icon {
+  width: 24px;
   vertical-align: text-bottom;
-  margin-right: 0.3em;
-}
+  margin-right: 8px;
+} */
 
 .btn-icon {
-  width: 1.4em;
-  /* ボタン内のアイコンサイズ */
+  width: 24px;
   height: auto;
   vertical-align: middle;
 }
 
 /* 検索ボタンとカメラボタンのスタイル調整 */
 .search-box button {
-  padding: 0.5rem;
+  /* padding: 8px; */
   /* 画像が入るのでパディングを少し調整 */
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: white;
+  font-size: 16px;
+  height: 44px;
+  padding: 0 16px;
+  /* display: inline-flex;
+  align-items: center;
+  justify-content: center; */
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -59,12 +70,12 @@ h1 {
 .search-box {
   display: flex;
   gap: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 input {
   flex: 1;
-  padding: 10px;
+  padding: 8px;
   font-size: 16px;
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -72,19 +83,19 @@ input {
 }
 
 /* ボタン共通設定 */
-.search-box button {
+/* .search-box button {
   border: none;
   border-radius: 4px;
   cursor: pointer;
   color: white;
   font-size: 16px;
   height: 44px;
-  padding: 0 15px;
-  display: inline-flex;
+  padding: 0 16px; */
+  /* display: inline-flex;
   align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-}
+  justify-content: center; */
+  /* box-sizing: border-box; */
+/* } */
 
 /* ボタン内のアイコン画像 */
 .btn-icon {
@@ -105,7 +116,7 @@ input {
    ========================================= */
 #qr-reader,
 #reader {
-  margin-bottom: 15px;
+  margin-bottom: 16px;
   border: 2px solid #ddd;
   border-radius: 4px;
   background: #000;
@@ -116,10 +127,10 @@ input {
 #stopScanBtn {
   background-color: #e74c3c;
   width: 100%;
-  margin-bottom: 15px;
+  margin-bottom: 16px;
   color: white;
   border: none;
-  padding: 10px;
+  padding: 8px;
   font-size: 16px;
   border-radius: 4px;
   cursor: pointer;
@@ -131,12 +142,12 @@ input {
 #loading {
   text-align: center;
   color: #666;
-  margin: 10px 0;
+  margin: 8px 0;
 }
 
 .error-message {
   color: #e74c3c;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   font-weight: bold;
   text-align: center;
 }
@@ -147,7 +158,7 @@ input {
 .result-card {
   background-color: white;
   border-top: 2px solid #eee;
-  padding-top: 15px;
+  padding-top: 16px;
   border-radius: 4px;
 }
 
@@ -155,25 +166,25 @@ input {
 .result-card.status-dead {
   background-color: #ecf0f1 !important;
   border: 2px solid #2c3e50 !important;
-  padding: 15px;
+  padding: 16px;
 }
 
 .result-card.status-cull {
   background-color: #e0f7fa !important;
   border: 2px solid #00acc1 !important;
-  padding: 15px;
+  padding: 16px;
 }
 
 .result-card.status-ship {
   background-color: #dff0d8 !important;
   border: 2px solid #27ae60 !important;
-  padding: 15px;
+  padding: 16px;
 }
 
 .result-card.status-alert {
   background-color: #f2dede !important;
   border: 2px solid #e74c3c !important;
-  padding: 15px;
+  padding: 16px;
 }
 
 /* ヘッダー情報 */
@@ -181,15 +192,15 @@ input {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 15px;
+  gap: 8px;
+  margin-bottom: 16px;
   border-bottom: 2px solid #eee;
-  padding-bottom: 10px;
+  padding-bottom: 8px;
 }
 
 #resId {
   margin: 0;
-  font-size: 1.8em;
+  font-size: 24px;
   font-weight: bold;
   color: #2c3e50;
 }
@@ -199,7 +210,7 @@ input {
   color: white;
   padding: 4px 12px;
   border-radius: 20px;
-  font-size: 0.9em;
+  font-size: 16px;
   font-weight: bold;
   white-space: nowrap;
 }
@@ -244,7 +255,7 @@ input {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 25px;
+  margin-bottom: 24px;
 }
 
 .info-item {
@@ -268,30 +279,30 @@ input {
 
 /* グラフ・テーブル */
 h3 {
-  margin-top: 30px;
+  margin-top: 24px;
   margin-bottom: 10px;
   color: #34495e;
-  font-size: 1.1em;
+  font-size: 16px;
   border-left: 4px solid #3498db;
-  padding-left: 10px;
+  padding-left: 8px;
 }
 
 .chart-container {
   position: relative;
   height: 250px;
   width: 100%;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9em;
+  font-size: 16px;
 }
 
 th,
 td {
-  padding: 10px 8px;
+  padding: 8px 8px;
   border-bottom: 1px solid #ddd;
   text-align: left;
 }
