@@ -53,7 +53,7 @@ h1 {
   /* color: white; */
   font-size: 16px;
   height: 44px;
-  padding: 0 16px;
+  /* padding: 0 16px; */
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
@@ -83,7 +83,7 @@ input {
   height: 24px;
   width: auto;
   display: block;
-  background-color: #7f8c8d;
+  /* background-color: #7f8c8d; */
 }
 
 /* =========================================
