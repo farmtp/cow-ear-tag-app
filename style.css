@@ -8,14 +8,14 @@ body {
   background-color: #f4f7f6;
   margin: 0;
   padding: 8px;
-  color: #333;
-  line-height: 1.6;
+  /* color: #333; */
+  color: #2c3e50;
+  line-height: 1.5;
 }
 
 .container {
   max-width: 600px;
   margin: 0 auto;
-  /* margin-bottom: 16px; */
   background: white;
   padding: 16px;
   border-radius: 8px;
@@ -29,13 +29,9 @@ h1 {
   margin-bottom: 16px;
 }
 
-.btn-icon {
-  width: 24px;
-  height: auto;
-  vertical-align: middle;
-}
-
-/* 検索ボタンとカメラボタンのスタイル調整 */
+/* =========================================
+   検索ボックス周辺
+   ========================================= */   
 .search-box button{
   border: none;
   border-radius: 4px;
@@ -49,13 +45,14 @@ h1 {
   justify-content: center;
 }
 
-/* =========================================
-   検索ボックス周辺
-   ========================================= */
 .search-box {
   display: flex;
   gap: 8px;
   margin-bottom: 24px;
+}
+
+.btn-icon {
+  width: 24px;
 }
 
 input {
@@ -65,14 +62,6 @@ input {
   border: 1px solid #ddd;
   border-radius: 4px;
   min-width: 0;
-}
-
-/* ボタン内のアイコン画像 */
-.btn-icon {
-  height: 24px;
-  width: auto;
-  display: block;
-  /* background-color: #7f8c8d; */
 }
 
 /* =========================================
