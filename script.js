@@ -659,3 +659,42 @@ function drawChart(data) {
     }
   });
 }
+
+// ==========================================
+// スキャン成功時の処理（ここが不足していました）
+// ==========================================
+function onScanSuccess(decodedText, decodedResult) {
+  console.log(`Scan result: ${decodedText}`, decodedResult);
+
+  // 1. 読み取り音が鳴ると分かりやすい（任意）
+  // alert("読み取りました: " + decodedText); 
+
+  // 2. スキャナーを停止して片付ける
+  if (html5QrCode) {
+    html5QrCode.stop().then(() => {
+      html5QrCode.clear();
+      document.getElementById('qr-reader').style.display = 'none';
+    }).catch(err => {
+      console.log("停止エラー: ", err);
+    });
+  }
+
+  // 3. 読み取った番号を入力欄に入れる
+  // ※GS1-128の場合、括弧()やアルファベットが含まれることがあるため、数字だけ抜き出します
+  const cleanNumber = decodedText.replace(/[^0-9]/g, ''); 
+  
+  // もし10桁より長い場合（国コードなどが付いている場合）、後ろから10桁を取るなどの調整が必要ですが
+  // まずはそのままセットします。
+  document.getElementById('tagInput').value = cleanNumber;
+
+  // 4. 自動で検索ボタンを押す
+  searchCattle();
+}
+
+// ==========================================
+// スキャン失敗時の処理
+// ==========================================
+function onScanFailure(error) {
+  // 読み取り中は毎秒何回も失敗エラーが出るのが普通なので、
+  // ここでは何もしなくてOKです（ログに出すと重くなります）
+}
