@@ -248,78 +248,133 @@ function playBeep() {
 //   }
 // }
 
+// // ==========================================
+// // カメラ起動処理
+// // ==========================================
+// function startCamera() {
+//   const resultArea = document.getElementById('result');
+//   const qrReader = document.getElementById('qr-reader');
+
+//   resultArea.style.display = 'none';
+//   qrReader.style.display = 'block';
+
+//   // もし既に起動していたら止める（念のため）
+//   if (html5QrCode) {
+//     html5QrCode.stop().then(() => {
+//       html5QrCode.clear();
+//     }).catch(err => {
+//       console.log("Stop failed: ", err);
+//     });
+//   }
+
+//   // ★変更点1：読み取りフォーマットを GS1-128 (CODE_128) に限定する
+//   // これにより、QRコードなどを探す無駄な処理が減り、感度が上がります
+//   const formatsToSupport = [ Html5QrcodeSupportedFormats.CODE_128 ];
+
+//   // インスタンス作成時にフォーマット指定を渡す
+//   html5QrCode = new Html5Qrcode("qr-reader", { 
+//     formatsToSupport: formatsToSupport,
+//     experimentalFeatures: {
+//       useBarCodeDetectorIfSupported: true // ブラウザネイティブの機能が使えれば使う
+//     }
+//   });
+
+//   // ★変更点2：設定の調整
+//   const config = {
+//     fps: 15, // フレームレートを少し上げる (デフォルト10 → 15)
+//     // バーコードは横長なので、正方形ではなく横長のボックスにする
+//     qrbox: { width: 300, height: 150 }, 
+//     aspectRatio: 1.0
+//   };
+
+//   // ★変更点3：カメラの解像度とフォーカス設定を強化
+//   // const videoConstraints = {
+//   //   facingMode: "environment", // 外側カメラ
+//   //   width: { min: 1280, ideal: 1920, max: 2560 }, // できるだけ高解像度を要求
+//   //   height: { min: 720, ideal: 1080, max: 1440 },
+//   //   focusMode: "continuous" // オートフォーカスを継続（対応ブラウザのみ）
+//   // };
+
+//   // ★修正：iPhone対応版のカメラ設定（制約を緩める）
+//   const videoConstraints = {
+//     facingMode: "environment", // 外側カメラ
+//     // "min" を消して "ideal"（推奨）だけにします。
+//     // これなら対応できない解像度でもエラーにならず、可能な最高画質になります。
+//     width: { ideal: 1920 },
+//     height: { ideal: 1080 }
+//     // focusMode は iOS Safari でエラーの原因になることがあるため一旦削除します
+//   };
+
+//   // startメソッドの第一引数を object 形式に変更して詳細なカメラ設定を渡す
+//   html5QrCode.start(
+//     videoConstraints, 
+//     config,
+//     onScanSuccess,
+//     onScanFailure
+//   // .catch(err => {
+//   //   console.error("カメラ起動エラー:", err);
+//   //   alert("カメラの起動に失敗しました。\nブラウザのカメラ権限を確認してください。");
+//   // });
+//   ).catch(err => {
+//   console.error("カメラ起動エラー:", err);
+//   // エラーの中身を表示（OverconstrainedError なら設定の問題）
+//   alert("カメラ起動エラー: " + err.name + "\n" + err.message);
+// });
+// }
+
 // ==========================================
-// カメラ起動処理
+// カメラ起動処理（安全版）
 // ==========================================
-function startCamera() {
+// ★変更点：async をつけて非同期関数にする
+async function startCamera() {
   const resultArea = document.getElementById('result');
   const qrReader = document.getElementById('qr-reader');
 
   resultArea.style.display = 'none';
   qrReader.style.display = 'block';
 
-  // もし既に起動していたら止める（念のため）
+  // ★変更点：もし既に動いていたら、停止が完了するのを「待つ」(await)
   if (html5QrCode) {
-    html5QrCode.stop().then(() => {
+    try {
+      await html5QrCode.stop();
       html5QrCode.clear();
-    }).catch(err => {
-      console.log("Stop failed: ", err);
-    });
+    } catch (err) {
+      console.log("停止処理中のエラー（無視して続行）: ", err);
+    }
   }
 
-  // ★変更点1：読み取りフォーマットを GS1-128 (CODE_128) に限定する
-  // これにより、QRコードなどを探す無駄な処理が減り、感度が上がります
+  // ここから新規起動
+  // まずは一番シンプルな設定で確実に動くか試す
   const formatsToSupport = [ Html5QrcodeSupportedFormats.CODE_128 ];
-
-  // インスタンス作成時にフォーマット指定を渡す
+  
   html5QrCode = new Html5Qrcode("qr-reader", { 
     formatsToSupport: formatsToSupport,
     experimentalFeatures: {
-      useBarCodeDetectorIfSupported: true // ブラウザネイティブの機能が使えれば使う
+      useBarCodeDetectorIfSupported: false // iOSでの不具合回避のため一旦false
     }
   });
 
-  // ★変更点2：設定の調整
+  // ★変更点：iPhoneで最も失敗しないシンプルなカメラ指定方法
+  const cameraConfig = { facingMode: "environment" }; 
+
   const config = {
-    fps: 15, // フレームレートを少し上げる (デフォルト10 → 15)
-    // バーコードは横長なので、正方形ではなく横長のボックスにする
-    qrbox: { width: 300, height: 150 }, 
+    fps: 10,
+    qrbox: { width: 250, height: 150 }, // 少し横長
     aspectRatio: 1.0
   };
 
-  // ★変更点3：カメラの解像度とフォーカス設定を強化
-  // const videoConstraints = {
-  //   facingMode: "environment", // 外側カメラ
-  //   width: { min: 1280, ideal: 1920, max: 2560 }, // できるだけ高解像度を要求
-  //   height: { min: 720, ideal: 1080, max: 1440 },
-  //   focusMode: "continuous" // オートフォーカスを継続（対応ブラウザのみ）
-  // };
-
-  // ★修正：iPhone対応版のカメラ設定（制約を緩める）
-  const videoConstraints = {
-    facingMode: "environment", // 外側カメラ
-    // "min" を消して "ideal"（推奨）だけにします。
-    // これなら対応できない解像度でもエラーにならず、可能な最高画質になります。
-    width: { ideal: 1920 },
-    height: { ideal: 1080 }
-    // focusMode は iOS Safari でエラーの原因になることがあるため一旦削除します
-  };
-
-  // startメソッドの第一引数を object 形式に変更して詳細なカメラ設定を渡す
-  html5QrCode.start(
-    videoConstraints, 
-    config,
-    onScanSuccess,
-    onScanFailure
-  // .catch(err => {
-  //   console.error("カメラ起動エラー:", err);
-  //   alert("カメラの起動に失敗しました。\nブラウザのカメラ権限を確認してください。");
-  // });
-  ).catch(err => {
-  console.error("カメラ起動エラー:", err);
-  // エラーの中身を表示（OverconstrainedError なら設定の問題）
-  alert("カメラ起動エラー: " + err.name + "\n" + err.message);
-});
+  try {
+    // 起動
+    await html5QrCode.start(
+      cameraConfig, 
+      config,
+      onScanSuccess,
+      onScanFailure
+    );
+  } catch (err) {
+    console.error("起動エラー詳細:", err);
+    alert("カメラが起動できませんでした。\nエラー: " + err);
+  }
 }
 
 function initAndStart(elementId) {
