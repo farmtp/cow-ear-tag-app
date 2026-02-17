@@ -67,14 +67,17 @@ input {
 /* =========================================
    カメラエリア
    ========================================= */
-#qr-reader,
-#reader {
-  margin-bottom: 16px;
+#qr-reader{
+  /* margin-bottom: 16px;
   border: 2px solid #ddd;
   border-radius: 4px;
   background: #000;
   overflow: hidden;
-  min-height: 250px;
+  min-height: 250px; */
+  width: 100%;
+  min-height: 300px; /* カメラ起動前に高さを確保 */
+  background-color: #000; /* 起動中の背景色 */
+  margin-bottom: 20px;
 }
 
 #stopScanBtn {

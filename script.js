@@ -113,77 +113,175 @@ function playBeep() {
 //   }
 // }
 
-function startCamera() {
-  const reader = document.getElementById('qr-reader');
-  reader.style.display = 'block';
+// function startCamera() {
+//   const reader = document.getElementById('qr-reader');
+//   reader.style.display = 'block';
 
-  // すでに起動している場合は停止してから再起動
+//   // すでに起動している場合は停止してから再起動
+//   if (html5QrCode) {
+//     html5QrCode.stop().then(() => {
+//       html5QrCode.clear();
+//       initCamera();
+//     }).catch(err => {
+//       console.error("Failed to stop camera", err);
+//     });
+//   } else {
+//     initCamera();
+//   }
+// }
+
+// function initCamera() {
+//   html5QrCode = new Html5Qrcode("qr-reader");
+
+//   // 【改善点1】読み取るフォーマットを限定する
+//   // 牛の耳標でよく使われる "CODE_128" だけにする（必要に応じて ITF など追加）
+//   // QRコードも読む必要がある場合は Html5QrcodeSupportedFormats.QR_CODE を配列に加える
+//   const formatsToSupport = [
+//     Html5QrcodeSupportedFormats.CODE_128,
+//     // Html5QrcodeSupportedFormats.ITF, 
+//   ];
+
+//   const config = {
+//     // 【改善点3】FPSを上げる (10 -> 20)
+//     fps: 20, 
+    
+//     // 【改善点2】読み取り枠をバーコードに合わせて横長にする
+//     qrbox: { width: 300, height: 100 },
+    
+//     // フォーマット設定を適用
+//     formatsToSupport: formatsToSupport,
+    
+//     // 実験的機能：フォーカスモードのサポート（対応端末のみ有効）
+//     videoConstraints: {
+//         focusMode: "continuous"
+//     }
+//   };
+
+//   html5QrCode.start(
+//     { facingMode: "environment" },
+//     config,
+//     onScanSuccess,
+//     onScanFailure
+//   ).catch(err => {
+//     console.error("カメラ起動エラー:", err);
+//     alert("カメラの起動に失敗しました。権限を確認してください。");
+//   });
+// }
+
+// function initAndStart(elementId) {
+//   html5QrCode = new Html5Qrcode(elementId);
+//   const config = {
+//     fps: 10,
+//     qrbox: { width: 250, height: 250 },
+//     aspectRatio: 1.0
+//   };
+
+//   html5QrCode.start(
+//     { facingMode: "environment" },
+//     config,
+//     (decodedText) => {
+//       const match = decodedText.match(/\d{10}/);
+//       if (match) {
+//         // --- 音とバイブレーション ---
+//         playBeep();
+//         if (navigator.vibrate) {
+//           navigator.vibrate(200);
+//         }
+
+//         document.getElementById('tagInput').value = match[0];
+//         stopCamera();
+//         searchCattle();
+//       }
+//     },
+//     (errorMessage) => { }
+//   ).catch(err => {
+//     console.error(err);
+//     document.getElementById('error').textContent = "カメラを起動できませんでした。HTTPS接続か確認してください。";
+//     stopCamera();
+//   });
+// }
+
+// function stopCamera() {
+//   const readerElement = document.getElementById('qr-reader') || document.getElementById('reader');
+//   if (html5QrCode) {
+//     html5QrCode.stop().then(() => {
+//       html5QrCode.clear();
+//       if (readerElement) readerElement.style.display = 'none';
+//       html5QrCode = null;
+//     }).catch(err => {
+//       console.log(err);
+//     });
+//   } else {
+//     if (readerElement) readerElement.style.display = 'none';
+//   }
+// }
+
+// ==========================================
+// カメラ起動処理 (iPhone修正 & 高速化版)
+// ==========================================
+function startCamera() {
+  const errorArea = document.getElementById('error');
+  errorArea.textContent = "";
+
+  const readerElement = document.getElementById('qr-reader');
+  if (!readerElement) {
+    alert("カメラ表示エリアが見つかりません");
+    return;
+  }
+
+  // 【iPhone対策】先に表示領域を確保しないと初期化に失敗することがある
+  readerElement.style.display = 'block';
+
+  // 既にインスタンスがある場合は停止処理を試みる
   if (html5QrCode) {
     html5QrCode.stop().then(() => {
       html5QrCode.clear();
-      initCamera();
+      initAndStart(readerElement.id);
     }).catch(err => {
-      console.error("Failed to stop camera", err);
+      console.log("Stop failed", err);
+      // 停止に失敗しても強制的に再作成を試みる
+      html5QrCode.clear();
+      initAndStart(readerElement.id);
     });
   } else {
-    initCamera();
+    initAndStart(readerElement.id);
   }
 }
 
-function initCamera() {
-  html5QrCode = new Html5Qrcode("qr-reader");
+function initAndStart(elementId) {
+  // インスタンス作成
+  html5QrCode = new Html5Qrcode(elementId);
 
-  // 【改善点1】読み取るフォーマットを限定する
-  // 牛の耳標でよく使われる "CODE_128" だけにする（必要に応じて ITF など追加）
-  // QRコードも読む必要がある場合は Html5QrcodeSupportedFormats.QR_CODE を配列に加える
+  // 【高速化】Code 128（牛の耳標）のみに限定して処理を軽くする
   const formatsToSupport = [
-    Html5QrcodeSupportedFormats.CODE_128,
-    // Html5QrcodeSupportedFormats.ITF, 
+     Html5QrcodeSupportedFormats.CODE_128 
   ];
 
   const config = {
-    // 【改善点3】FPSを上げる (10 -> 20)
-    fps: 20, 
+    // 【高速化】FPSを上げて、ブレている一瞬の隙に読み取る (10 -> 20)
+    fps: 20,
     
-    // 【改善点2】読み取り枠をバーコードに合わせて横長にする
-    qrbox: { width: 300, height: 100 },
+    // 【高速化】横長のバーコードに合わせて読み取り枠を横長にする
+    // iPhoneの画面からはみ出さないよう少し幅を調整 (300 -> 250)
+    qrbox: { width: 250, height: 100 },
     
-    // フォーマット設定を適用
-    formatsToSupport: formatsToSupport,
-    
-    // 実験的機能：フォーカスモードのサポート（対応端末のみ有効）
-    videoConstraints: {
-        focusMode: "continuous"
-    }
+    // アスペクト比指定（未指定の方がモバイルでは安定する場合があるため削除または1.0）
+    aspectRatio: 1.0,
+
+    formatsToSupport: formatsToSupport
   };
 
   html5QrCode.start(
-    { facingMode: "environment" },
-    config,
-    onScanSuccess,
-    onScanFailure
-  ).catch(err => {
-    console.error("カメラ起動エラー:", err);
-    alert("カメラの起動に失敗しました。権限を確認してください。");
-  });
-}
-
-function initAndStart(elementId) {
-  html5QrCode = new Html5Qrcode(elementId);
-  const config = {
-    fps: 10,
-    qrbox: { width: 250, height: 250 },
-    aspectRatio: 1.0
-  };
-
-  html5QrCode.start(
+    // リアカメラを指定
     { facingMode: "environment" },
     config,
     (decodedText) => {
+      // 読み取り成功時の処理
       const match = decodedText.match(/\d{10}/);
       if (match) {
-        // --- 音とバイブレーション ---
         playBeep();
+        
+        // iPhoneではvibrateが効かないことが多いですが一応記述
         if (navigator.vibrate) {
           navigator.vibrate(200);
         }
@@ -193,23 +291,37 @@ function initAndStart(elementId) {
         searchCattle();
       }
     },
-    (errorMessage) => { }
+    (errorMessage) => { 
+      // 読み取り待機中のエラーは無視（コンソールに出すと重くなるので何もしない）
+    }
   ).catch(err => {
     console.error(err);
-    document.getElementById('error').textContent = "カメラを起動できませんでした。HTTPS接続か確認してください。";
+    
+    // 具体的なエラーメッセージを表示
+    let msg = "カメラを起動できませんでした。";
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+      msg += "\n【重要】iPhoneでは https:// での接続が必須です。";
+    } else {
+      msg += "\nブラウザのカメラ権限を確認するか、ページを再読み込みしてください。";
+    }
+    document.getElementById('error').innerText = msg;
+    
     stopCamera();
   });
 }
 
 function stopCamera() {
-  const readerElement = document.getElementById('qr-reader') || document.getElementById('reader');
+  const readerElement = document.getElementById('qr-reader');
   if (html5QrCode) {
     html5QrCode.stop().then(() => {
       html5QrCode.clear();
       if (readerElement) readerElement.style.display = 'none';
-      html5QrCode = null;
+      html5QrCode = null; // 変数をリセット
     }).catch(err => {
-      console.log(err);
+      console.log("Stop error:", err);
+      // エラーでも表示は消す
+      if (readerElement) readerElement.style.display = 'none';
+      html5QrCode = null;
     });
   } else {
     if (readerElement) readerElement.style.display = 'none';
