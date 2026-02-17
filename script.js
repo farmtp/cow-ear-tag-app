@@ -288,13 +288,23 @@ function startCamera() {
   };
 
   // ★変更点3：カメラの解像度とフォーカス設定を強化
+  // const videoConstraints = {
+  //   facingMode: "environment", // 外側カメラ
+  //   width: { min: 1280, ideal: 1920, max: 2560 }, // できるだけ高解像度を要求
+  //   height: { min: 720, ideal: 1080, max: 1440 },
+  //   focusMode: "continuous" // オートフォーカスを継続（対応ブラウザのみ）
+  // };
+
+  // ★修正：iPhone対応版のカメラ設定（制約を緩める）
   const videoConstraints = {
     facingMode: "environment", // 外側カメラ
-    width: { min: 1280, ideal: 1920, max: 2560 }, // できるだけ高解像度を要求
-    height: { min: 720, ideal: 1080, max: 1440 },
-    focusMode: "continuous" // オートフォーカスを継続（対応ブラウザのみ）
+    // "min" を消して "ideal"（推奨）だけにします。
+    // これなら対応できない解像度でもエラーにならず、可能な最高画質になります。
+    width: { ideal: 1920 },
+    height: { ideal: 1080 }
+    // focusMode は iOS Safari でエラーの原因になることがあるため一旦削除します
   };
-
+  
   // startメソッドの第一引数を object 形式に変更して詳細なカメラ設定を渡す
   html5QrCode.start(
     videoConstraints, 
