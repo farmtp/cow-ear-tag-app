@@ -304,17 +304,22 @@ function startCamera() {
     height: { ideal: 1080 }
     // focusMode は iOS Safari でエラーの原因になることがあるため一旦削除します
   };
-  
+
   // startメソッドの第一引数を object 形式に変更して詳細なカメラ設定を渡す
   html5QrCode.start(
     videoConstraints, 
     config,
     onScanSuccess,
     onScanFailure
+  // .catch(err => {
+  //   console.error("カメラ起動エラー:", err);
+  //   alert("カメラの起動に失敗しました。\nブラウザのカメラ権限を確認してください。");
+  // });
   ).catch(err => {
-    console.error("カメラ起動エラー:", err);
-    alert("カメラの起動に失敗しました。\nブラウザのカメラ権限を確認してください。");
-  });
+  console.error("カメラ起動エラー:", err);
+  // エラーの中身を表示（OverconstrainedError なら設定の問題）
+  alert("カメラ起動エラー: " + err.name + "\n" + err.message);
+});
 }
 
 function initAndStart(elementId) {
