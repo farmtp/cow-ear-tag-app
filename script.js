@@ -219,33 +219,92 @@ function playBeep() {
 // ==========================================
 // カメラ起動処理 (iPhone修正 & 高速化版)
 // ==========================================
+// function startCamera() {
+//   const errorArea = document.getElementById('error');
+//   errorArea.textContent = "";
+
+//   const readerElement = document.getElementById('qr-reader');
+//   if (!readerElement) {
+//     alert("カメラ表示エリアが見つかりません");
+//     return;
+//   }
+
+//   // 【iPhone対策】先に表示領域を確保しないと初期化に失敗することがある
+//   readerElement.style.display = 'block';
+
+//   // 既にインスタンスがある場合は停止処理を試みる
+//   if (html5QrCode) {
+//     html5QrCode.stop().then(() => {
+//       html5QrCode.clear();
+//       initAndStart(readerElement.id);
+//     }).catch(err => {
+//       console.log("Stop failed", err);
+//       // 停止に失敗しても強制的に再作成を試みる
+//       html5QrCode.clear();
+//       initAndStart(readerElement.id);
+//     });
+//   } else {
+//     initAndStart(readerElement.id);
+//   }
+// }
+
+// ==========================================
+// カメラ起動処理
+// ==========================================
 function startCamera() {
-  const errorArea = document.getElementById('error');
-  errorArea.textContent = "";
+  const resultArea = document.getElementById('result');
+  const qrReader = document.getElementById('qr-reader');
 
-  const readerElement = document.getElementById('qr-reader');
-  if (!readerElement) {
-    alert("カメラ表示エリアが見つかりません");
-    return;
-  }
+  resultArea.style.display = 'none';
+  qrReader.style.display = 'block';
 
-  // 【iPhone対策】先に表示領域を確保しないと初期化に失敗することがある
-  readerElement.style.display = 'block';
-
-  // 既にインスタンスがある場合は停止処理を試みる
+  // もし既に起動していたら止める（念のため）
   if (html5QrCode) {
     html5QrCode.stop().then(() => {
       html5QrCode.clear();
-      initAndStart(readerElement.id);
     }).catch(err => {
-      console.log("Stop failed", err);
-      // 停止に失敗しても強制的に再作成を試みる
-      html5QrCode.clear();
-      initAndStart(readerElement.id);
+      console.log("Stop failed: ", err);
     });
-  } else {
-    initAndStart(readerElement.id);
   }
+
+  // ★変更点1：読み取りフォーマットを GS1-128 (CODE_128) に限定する
+  // これにより、QRコードなどを探す無駄な処理が減り、感度が上がります
+  const formatsToSupport = [ Html5QrcodeSupportedFormats.CODE_128 ];
+
+  // インスタンス作成時にフォーマット指定を渡す
+  html5QrCode = new Html5Qrcode("qr-reader", { 
+    formatsToSupport: formatsToSupport,
+    experimentalFeatures: {
+      useBarCodeDetectorIfSupported: true // ブラウザネイティブの機能が使えれば使う
+    }
+  });
+
+  // ★変更点2：設定の調整
+  const config = {
+    fps: 15, // フレームレートを少し上げる (デフォルト10 → 15)
+    // バーコードは横長なので、正方形ではなく横長のボックスにする
+    qrbox: { width: 300, height: 150 }, 
+    aspectRatio: 1.0
+  };
+
+  // ★変更点3：カメラの解像度とフォーカス設定を強化
+  const videoConstraints = {
+    facingMode: "environment", // 外側カメラ
+    width: { min: 1280, ideal: 1920, max: 2560 }, // できるだけ高解像度を要求
+    height: { min: 720, ideal: 1080, max: 1440 },
+    focusMode: "continuous" // オートフォーカスを継続（対応ブラウザのみ）
+  };
+
+  // startメソッドの第一引数を object 形式に変更して詳細なカメラ設定を渡す
+  html5QrCode.start(
+    videoConstraints, 
+    config,
+    onScanSuccess,
+    onScanFailure
+  ).catch(err => {
+    console.error("カメラ起動エラー:", err);
+    alert("カメラの起動に失敗しました。\nブラウザのカメラ権限を確認してください。");
+  });
 }
 
 function initAndStart(elementId) {
