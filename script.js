@@ -88,29 +88,84 @@ function playBeep() {
 // ==========================================
 // カメラ起動処理
 // ==========================================
+// function startCamera() {
+//   const errorArea = document.getElementById('error');
+//   errorArea.textContent = "";
+
+//   const readerElement = document.getElementById('qr-reader') || document.getElementById('reader');
+//   if (!readerElement) {
+//     alert("カメラ表示エリアが見つかりません");
+//     return;
+//   }
+
+//   readerElement.style.display = 'block';
+
+//   if (html5QrCode) {
+//     html5QrCode.stop().then(() => {
+//       html5QrCode.clear();
+//       initAndStart(readerElement.id);
+//     }).catch(err => {
+//       console.log("Stop failed", err);
+//       initAndStart(readerElement.id);
+//     });
+//   } else {
+//     initAndStart(readerElement.id);
+//   }
+// }
+
 function startCamera() {
-  const errorArea = document.getElementById('error');
-  errorArea.textContent = "";
+  const reader = document.getElementById('qr-reader');
+  reader.style.display = 'block';
 
-  const readerElement = document.getElementById('qr-reader') || document.getElementById('reader');
-  if (!readerElement) {
-    alert("カメラ表示エリアが見つかりません");
-    return;
-  }
-
-  readerElement.style.display = 'block';
-
+  // すでに起動している場合は停止してから再起動
   if (html5QrCode) {
     html5QrCode.stop().then(() => {
       html5QrCode.clear();
-      initAndStart(readerElement.id);
+      initCamera();
     }).catch(err => {
-      console.log("Stop failed", err);
-      initAndStart(readerElement.id);
+      console.error("Failed to stop camera", err);
     });
   } else {
-    initAndStart(readerElement.id);
+    initCamera();
   }
+}
+
+function initCamera() {
+  html5QrCode = new Html5Qrcode("qr-reader");
+
+  // 【改善点1】読み取るフォーマットを限定する
+  // 牛の耳標でよく使われる "CODE_128" だけにする（必要に応じて ITF など追加）
+  // QRコードも読む必要がある場合は Html5QrcodeSupportedFormats.QR_CODE を配列に加える
+  const formatsToSupport = [
+    Html5QrcodeSupportedFormats.CODE_128,
+    // Html5QrcodeSupportedFormats.ITF, 
+  ];
+
+  const config = {
+    // 【改善点3】FPSを上げる (10 -> 20)
+    fps: 20, 
+    
+    // 【改善点2】読み取り枠をバーコードに合わせて横長にする
+    qrbox: { width: 300, height: 100 },
+    
+    // フォーマット設定を適用
+    formatsToSupport: formatsToSupport,
+    
+    // 実験的機能：フォーカスモードのサポート（対応端末のみ有効）
+    videoConstraints: {
+        focusMode: "continuous"
+    }
+  };
+
+  html5QrCode.start(
+    { facingMode: "environment" },
+    config,
+    onScanSuccess,
+    onScanFailure
+  ).catch(err => {
+    console.error("カメラ起動エラー:", err);
+    alert("カメラの起動に失敗しました。権限を確認してください。");
+  });
 }
 
 function initAndStart(elementId) {
