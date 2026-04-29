@@ -11,45 +11,9 @@ let myChart = null;
 // 初期化処理
 // ==========================================
 window.onload = function () {
-  // loadAllData();
+  loadAllData();
 
-  async function init(){
-
-   // 少し待たせる（演出）
-   await new Promise(resolve => setTimeout(resolve, 2500));
-
-   let dots=0;
-
-    setInterval(()=>{
-    dots=(dots+1)%4;
-    document.querySelector("#loading-screen p").textContent =
-      "しばらくお待ちください" + ".".repeat(dots);
-    },500);
-
-   await loadData();
-
-   // ローディング画面を消す
-   document.getElementById("loading-screen").style.display="none";
-}
-
-async function init(){
-
-await loadData();
-
-/* 少し演出時間 */
-await new Promise(
-r=>setTimeout(r,4500)
-);
-
-document.getElementById(
-"loading-screen"
-).style.display="none";
-
-}
-
-init();
-
-
+// init();
 
 };
 
