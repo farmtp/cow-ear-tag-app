@@ -4,7 +4,6 @@
 let masterData = [];
 let weightData = [];
 let isDataLoaded = false;
-let html5QrCode = null;
 let myChart = null;
 
 // ==========================================
@@ -51,281 +50,99 @@ async function loadAllData() {
 
   } catch (error) {
     console.error(error);
-    if (errorArea) errorArea.textContent = "データの読み込みに失敗しました";
+    if (errorArea) {
+      errorArea.textContent = location.protocol === 'file:'
+        ? "データの読み込みに失敗しました。ファイルを直接開くとCSVを読めません。ローカルサーバー（http://localhost）経由で開いてください。"
+        : "データの読み込みに失敗しました";
+    }
     loading.style.display = 'none';
   }
 }
 
 // ==========================================
-// ビープ音再生 (Web Audio API)
+// 耳標番号の部分一致検索
+// ------------------------------------------
+// OCRは距離によって読める桁数が変わる（4 / 5 / 9 / 10桁）。
+// 耳標の並び「上段5桁 + 大きい4桁 + CD1桁」に合わせて照合する。
+//   10桁: 完全一致
+//    9桁: 先頭9桁（CD無し）
+//    5桁: 下5桁（大きい4桁 + CD）
+//    4桁: 6〜9桁目（大きい4桁）
 // ==========================================
-function playBeep() {
-  try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
-
-    const ctx = new AudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.type = 'sine';       // 音色: 正弦波
-    osc.frequency.value = 1500; // 周波数: 1500Hz (高めのピッ音)
-    gain.gain.value = 0.1;   // 音量: 小さめ
-
-    osc.start();
-    setTimeout(() => {
-      osc.stop();
-      ctx.close();
-    }, 100); // 0.1秒間再生
-  } catch (e) {
-    console.error("Audio play failed", e);
+function findCattleByPartial(num, kind) {
+  kind = kind || num.length;
+  const seen = new Set();
+  const out = [];
+  for (const row of masterData) {
+    const id = (row['個体識別番号'] || '').trim();
+    if (id.length !== 10 || seen.has(id)) continue;
+    let hit = false;
+    if (kind === 10) hit = id === num;
+    else if (kind === 9) hit = id.startsWith(num);
+    else if (kind === 5) hit = id.slice(5) === num;
+    else if (kind === 4) hit = id.slice(5, 9) === num;
+    if (hit) {
+      seen.add(id);
+      out.push({ id, status: (row['ステータス'] || '').trim() });
+    }
   }
+  // 在籍中（ステータス空欄）の牛を先頭に
+  out.sort((a, b) => (a.status ? 1 : 0) - (b.status ? 1 : 0));
+  return out;
 }
 
 // ==========================================
-// カメラ起動処理
+// カメラ起動処理（耳標の数字をOCRで読み取る）
+// 読み取りエンジンは ocr-scanner.js（interbcd から移植）
 // ==========================================
-// function startCamera() {
-//   const errorArea = document.getElementById('error');
-//   errorArea.textContent = "";
-
-//   const readerElement = document.getElementById('qr-reader') || document.getElementById('reader');
-//   if (!readerElement) {
-//     alert("カメラ表示エリアが見つかりません");
-//     return;
-//   }
-
-//   readerElement.style.display = 'block';
-
-//   if (html5QrCode) {
-//     html5QrCode.stop().then(() => {
-//       html5QrCode.clear();
-//       initAndStart(readerElement.id);
-//     }).catch(err => {
-//       console.log("Stop failed", err);
-//       initAndStart(readerElement.id);
-//     });
-//   } else {
-//     initAndStart(readerElement.id);
-//   }
-// }
-
-// function startCamera() {
-//   const reader = document.getElementById('qr-reader');
-//   reader.style.display = 'block';
-
-//   // すでに起動している場合は停止してから再起動
-//   if (html5QrCode) {
-//     html5QrCode.stop().then(() => {
-//       html5QrCode.clear();
-//       initCamera();
-//     }).catch(err => {
-//       console.error("Failed to stop camera", err);
-//     });
-//   } else {
-//     initCamera();
-//   }
-// }
-
-// function initCamera() {
-//   html5QrCode = new Html5Qrcode("qr-reader");
-
-//   // 【改善点1】読み取るフォーマットを限定する
-//   // 牛の耳標でよく使われる "CODE_128" だけにする（必要に応じて ITF など追加）
-//   // QRコードも読む必要がある場合は Html5QrcodeSupportedFormats.QR_CODE を配列に加える
-//   const formatsToSupport = [
-//     Html5QrcodeSupportedFormats.CODE_128,
-//     // Html5QrcodeSupportedFormats.ITF, 
-//   ];
-
-//   const config = {
-//     // 【改善点3】FPSを上げる (10 -> 20)
-//     fps: 20, 
-    
-//     // 【改善点2】読み取り枠をバーコードに合わせて横長にする
-//     qrbox: { width: 300, height: 100 },
-    
-//     // フォーマット設定を適用
-//     formatsToSupport: formatsToSupport,
-    
-//     // 実験的機能：フォーカスモードのサポート（対応端末のみ有効）
-//     videoConstraints: {
-//         focusMode: "continuous"
-//     }
-//   };
-
-//   html5QrCode.start(
-//     { facingMode: "environment" },
-//     config,
-//     onScanSuccess,
-//     onScanFailure
-//   ).catch(err => {
-//     console.error("カメラ起動エラー:", err);
-//     alert("カメラの起動に失敗しました。権限を確認してください。");
-//   });
-// }
-
-// function initAndStart(elementId) {
-//   html5QrCode = new Html5Qrcode(elementId);
-//   const config = {
-//     fps: 10,
-//     qrbox: { width: 250, height: 250 },
-//     aspectRatio: 1.0
-//   };
-
-//   html5QrCode.start(
-//     { facingMode: "environment" },
-//     config,
-//     (decodedText) => {
-//       const match = decodedText.match(/\d{10}/);
-//       if (match) {
-//         // --- 音とバイブレーション ---
-//         playBeep();
-//         if (navigator.vibrate) {
-//           navigator.vibrate(200);
-//         }
-
-//         document.getElementById('tagInput').value = match[0];
-//         stopCamera();
-//         searchCattle();
-//       }
-//     },
-//     (errorMessage) => { }
-//   ).catch(err => {
-//     console.error(err);
-//     document.getElementById('error').textContent = "カメラを起動できませんでした。HTTPS接続か確認してください。";
-//     stopCamera();
-//   });
-// }
-
-// function stopCamera() {
-//   const readerElement = document.getElementById('qr-reader') || document.getElementById('reader');
-//   if (html5QrCode) {
-//     html5QrCode.stop().then(() => {
-//       html5QrCode.clear();
-//       if (readerElement) readerElement.style.display = 'none';
-//       html5QrCode = null;
-//     }).catch(err => {
-//       console.log(err);
-//     });
-//   } else {
-//     if (readerElement) readerElement.style.display = 'none';
-//   }
-// }
-
-// ==========================================
-// カメラ起動処理 (iPhone修正 & 高速化版)
-// ==========================================
-function startCamera() {
+async function startCamera() {
   const errorArea = document.getElementById('error');
   errorArea.textContent = "";
 
-  const readerElement = document.getElementById('qr-reader');
-  if (!readerElement) {
-    alert("カメラ表示エリアが見つかりません");
+  if (!window.EarTagScanner) {
+    errorArea.textContent = "読み取り機能を読み込めませんでした。ページを再読み込みしてください。";
     return;
   }
 
-  // 【iPhone対策】先に表示領域を確保しないと初期化に失敗することがある
-  readerElement.style.display = 'block';
-
-  // 既にインスタンスがある場合は停止処理を試みる
-  if (html5QrCode) {
-    html5QrCode.stop().then(() => {
-      html5QrCode.clear();
-      initAndStart(readerElement.id);
-    }).catch(err => {
-      console.log("Stop failed", err);
-      // 停止に失敗しても強制的に再作成を試みる
-      html5QrCode.clear();
-      initAndStart(readerElement.id);
-    });
-  } else {
-    initAndStart(readerElement.id);
-  }
-}
-
-function initAndStart(elementId) {
-  // インスタンス作成
-  html5QrCode = new Html5Qrcode(elementId);
-
-  // 【高速化】Code 128（牛の耳標）のみに限定して処理を軽くする
-  const formatsToSupport = [
-     Html5QrcodeSupportedFormats.CODE_128 
-  ];
-
-  const config = {
-    // 【高速化】FPSを上げて、ブレている一瞬の隙に読み取る (10 -> 20)
-    fps: 20,
-    
-    // 【高速化】横長のバーコードに合わせて読み取り枠を横長にする
-    // iPhoneの画面からはみ出さないよう少し幅を調整 (300 -> 250)
-    qrbox: { width: 250, height: 100 },
-    
-    // アスペクト比指定（未指定の方がモバイルでは安定する場合があるため削除または1.0）
-    aspectRatio: 1.0,
-
-    formatsToSupport: formatsToSupport
-  };
-
-  html5QrCode.start(
-    // リアカメラを指定
-    { facingMode: "environment" },
-    config,
-    (decodedText) => {
-      // 読み取り成功時の処理
-      const match = decodedText.match(/\d{10}/);
-      if (match) {
-        playBeep();
-        
-        // iPhoneではvibrateが効かないことが多いですが一応記述
-        if (navigator.vibrate) {
-          navigator.vibrate(200);
-        }
-
-        document.getElementById('tagInput').value = match[0];
-        stopCamera();
+  try {
+    await EarTagScanner.open({
+      lookup: (num, kind) => (isDataLoaded ? findCattleByPartial(num, kind) : []),
+      onSelect: (id) => {
+        document.getElementById('tagInput').value = id;
         searchCattle();
       }
-    },
-    (errorMessage) => { 
-      // 読み取り待機中のエラーは無視（コンソールに出すと重くなるので何もしない）
-    }
-  ).catch(err => {
+    });
+  } catch (err) {
     console.error(err);
-    
-    // 具体的なエラーメッセージを表示
-    let msg = "カメラを起動できませんでした。";
-    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-      msg += "\n【重要】iPhoneでは https:// での接続が必須です。";
-    } else {
-      msg += "\nブラウザのカメラ権限を確認するか、ページを再読み込みしてください。";
-    }
-    document.getElementById('error').innerText = msg;
-    
-    stopCamera();
-  });
+    errorArea.innerText = err.message || "カメラを起動できませんでした。";
+  }
 }
 
 function stopCamera() {
-  const readerElement = document.getElementById('qr-reader');
-  if (html5QrCode) {
-    html5QrCode.stop().then(() => {
-      html5QrCode.clear();
-      if (readerElement) readerElement.style.display = 'none';
-      html5QrCode = null; // 変数をリセット
-    }).catch(err => {
-      console.log("Stop error:", err);
-      // エラーでも表示は消す
-      if (readerElement) readerElement.style.display = 'none';
-      html5QrCode = null;
-    });
-  } else {
-    if (readerElement) readerElement.style.display = 'none';
-  }
+  if (window.EarTagScanner) EarTagScanner.close();
+}
+
+// 候補が複数あるときに一覧を出す（手入力で4桁・5桁を入れた場合など）
+function showCandidateList(list) {
+  const errorArea = document.getElementById('error');
+  errorArea.innerHTML = '';
+  const p = document.createElement('div');
+  p.textContent = `該当が${list.length}頭あります。選択してください：`;
+  errorArea.appendChild(p);
+  const wrap = document.createElement('div');
+  wrap.className = 'candidate-list';
+  list.forEach(m => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'candidate-btn';
+    btn.textContent = `${m.id.slice(0, 5)}-${m.id.slice(5)}（${m.status || '在籍'}）`;
+    btn.onclick = () => {
+      document.getElementById('tagInput').value = m.id;
+      searchCattle();
+    };
+    wrap.appendChild(btn);
+  });
+  errorArea.appendChild(wrap);
 }
 
 // ==========================================
@@ -334,7 +151,7 @@ function stopCamera() {
 function searchCattle() {
   if (!isDataLoaded) { alert("データ読み込み中です"); return; }
 
-  const inputId = document.getElementById('tagInput').value.trim();
+  let inputId = document.getElementById('tagInput').value.trim().replace(/[\s-]/g, '');
   const resultArea = document.getElementById('result');
   const errorArea = document.getElementById('error');
 
@@ -347,7 +164,21 @@ function searchCattle() {
     return;
   }
 
-  const originalCow = masterData.find(row => row['個体識別番号'] === inputId);
+  let originalCow = masterData.find(row => row['個体識別番号'] === inputId);
+
+  // 完全一致しない場合、4桁（大きい数字）・5桁・9桁なら部分一致で探す
+  if (!originalCow && /^\d+$/.test(inputId) && [4, 5, 9].includes(inputId.length)) {
+    const list = findCattleByPartial(inputId);
+    if (list.length === 1) {
+      inputId = list[0].id;
+      document.getElementById('tagInput').value = inputId;
+      originalCow = masterData.find(row => row['個体識別番号'] === inputId);
+    } else if (list.length > 1) {
+      showCandidateList(list);
+      return;
+    }
+  }
+
   if (!originalCow) {
     errorArea.textContent = "該当する牛が見つかりませんでした";
     return;

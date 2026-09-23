@@ -10,7 +10,7 @@
   <link rel="icon" href="favicon.png" type="image/png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
@@ -22,7 +22,7 @@
     </header>
 
     <div class="search-box">
-      <input type="text" id="tagInput" placeholder="個体識別番号を入力 (例: 1234567890)">
+      <input type="text" id="tagInput" placeholder="個体識別番号（10桁 or 大きい4桁）" inputmode="numeric">
 
       <button class="icon-btn" onclick="startCamera()" title="カメラ起動">
         <img src="camera.png" alt="カメラ" class="btn-icon">
@@ -36,8 +36,6 @@
     <div id="loading">データを読み込み中...</div>
 
     <div id="error" class="error-message"></div>
-
-    <div id="qr-reader" style="display: none;"></div>
 
     <div id="result" class="result-card" style="display: none;">
       <div class="header-info">
@@ -67,6 +65,7 @@
     </div>
   </div>
 
+  <script src="ocr-scanner.js"></script>
   <script src="script.js"></script>
 </body>
 
